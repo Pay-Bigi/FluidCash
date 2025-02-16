@@ -1,0 +1,6 @@
+@FluidCash_HostAddress = http://localhost:5034
+
+GET {{FluidCash_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
