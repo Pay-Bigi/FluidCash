@@ -1,6 +1,6 @@
 ﻿namespace FluidCash.Models;
 
-public class BaseEntity
+public class BaseEntity: IBaseEntity
 {
     public string? Id { get; set; }
     public string? CreatedBy { get; set; }
