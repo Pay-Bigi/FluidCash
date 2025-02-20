@@ -7,10 +7,12 @@ namespace FluidCash.DataAccess.Repo;
 public sealed class BaseRepo<T> : IBaseRepo<T> where T : class, IBaseEntity
 {
     private readonly DbSet<T> _dbSet;
+    private readonly DataContext _dataContext;
 
     public BaseRepo(DataContext dataContext)
     {
         _dbSet = dataContext.Set<T>();
+        _dataContext = dataContext;
     }
 
     public IQueryable<T> GetAll()
@@ -71,5 +73,10 @@ public sealed class BaseRepo<T> : IBaseRepo<T> where T : class, IBaseEntity
     public void Delete(T entity)
     {
         _dbSet.Remove(entity);
+    }
+
+    public async Task SaveChangesAsync()
+    {
+        await _dataContext.SaveChangesAsync();
     }
 }

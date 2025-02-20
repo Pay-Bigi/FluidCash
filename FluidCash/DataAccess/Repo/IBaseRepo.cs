@@ -13,4 +13,5 @@ public interface IBaseRepo<T> where T : class
     void Update(T entity);
     void UpdateRange(IEnumerable<T> entities);
     void Delete(T entity);
+    Task SaveChangesAsync();
 }
