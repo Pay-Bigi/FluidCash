@@ -17,9 +17,15 @@ public class AuthServices : IAuthServices
         _appUserRepo = appUserRepo;
     }
 
+    public Task<StandardResponse<string>>
+        CreateAccountAsync(CreateAccountDto createAccountDto)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<StandardResponse<string>>
-    SetTransactionPasswordWithOtpAsync
-    (TransactionPasswordParams passwordParams)
+        SetTransactionPasswordWithOtpAsync
+        (TransactionPasswordParams passwordParams)
     {
         var appUser = _appUserRepo.GetNonDeletedByCondition(user => user.Id == passwordParams.userId).FirstOrDefault();
         if (appUser is null)
