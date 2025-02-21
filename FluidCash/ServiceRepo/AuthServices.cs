@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FluidCash.ServiceRepo;
 
-public class AuthServices:IAuthServices
+public class AuthServices : IAuthServices
 {
     private readonly IBaseRepo<AppUser> _appUserRepo;
 
@@ -21,28 +21,40 @@ public class AuthServices:IAuthServices
     SetTransactionPasswordWithOtpAsync
     (TransactionPasswordParams passwordParams)
     {
-        var appUser = _appUserRepo.GetNonDeletedByCondition(user => user.I == passwordParams.walletId)
-            .Include(wlt => wlt.Account)
-            .FirstOrDefault();
-        if (wallet is null)
+        var appUser = _appUserRepo.GetNonDeletedByCondition(user => user.Id == passwordParams.userId).FirstOrDefault();
+        if (appUser is null)
         {
-            string errorMsg = "Invalid Wallet Address";
+            string errorMsg = "Invalid user Address";
             return StandardResponse<string>.Failed(data: null, errorMessage: errorMsg);
         }
 
-        var user = wallet.Account;
+        var pwHasher = new PasswordHasher<string>();
+        string hashedPassword = pwHasher.HashPassword(passwordParams.userId, passwordParams.transactionPassword);
+        appUser.HashedTransactionPin = hashedPassword;
 
-        
-            var pwHasher = new PasswordHasher<string>();
-            string hashedPassword = pwHasher.HashPassword(passwordParams.walletId, passwordParams.transactionPassword);
-             = hashedPassword;
+        await _appUserRepo.SaveChangesAsync();
 
-            await _appUserRepo.SaveChangesAsync();
+        string successMsg = "Transaction password successfully set";
+        return StandardResponse<string>.Success(data: successMsg);
+    }
 
+    public async Task<StandardResponse<bool>>
+        VerifyTransactionPasswordAsync
+        (TransactionPasswordParams passwordParams)
+    {
+        string errorMsg = "Invalid user credentials";
+        var user = await _appUserRepo.GetNonDeletedByCondition(wlt => wlt.Id == passwordParams.userId)
+            .AsNoTracking().FirstOrDefaultAsync();
+        if (user is null)
+            return StandardResponse<bool>.Failed(data: false, errorMessage: errorMsg);
+        var pwHasher = new PasswordHasher<string>();
 
-            string successMsg = "Transaction password successfully set";
-            return StandardResponse<string>.Success(data: successMsg);
+        var verifyPassword = pwHasher.VerifyHashedPassword(passwordParams.userId, user.HashedTransactionPin, passwordParams.transactionPassword);
 
+        if (verifyPassword == PasswordVerificationResult.Failed)
+            return StandardResponse<bool>.Failed(data: false, errorMessage: errorMsg);
+
+        return StandardResponse<bool>.Success(data: true);
     }
 
 }

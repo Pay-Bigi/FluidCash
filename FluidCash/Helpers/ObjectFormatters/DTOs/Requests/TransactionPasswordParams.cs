@@ -2,6 +2,6 @@
 
 public record TransactionPasswordParams
 (
-    string? walletId,
+    string? userId,
     string? transactionPassword
 );

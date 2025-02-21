@@ -8,4 +8,8 @@ public interface IAuthServices
     Task<StandardResponse<string>>
     SetTransactionPasswordWithOtpAsync
     (TransactionPasswordParams passwordParams);
+
+    Task<StandardResponse<bool>>
+        VerifyTransactionPasswordAsync
+        (TransactionPasswordParams passwordParams);
 }
