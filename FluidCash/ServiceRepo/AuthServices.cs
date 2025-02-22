@@ -4,7 +4,6 @@ using FluidCash.Helpers.ObjectFormatters.ObjectWrapper;
 using FluidCash.IServiceRepo;
 using FluidCash.Models;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 
 namespace FluidCash.ServiceRepo;
 
@@ -51,6 +50,23 @@ public class AuthServices : IAuthServices
 
         string? successMsg = "Account successfully created. Proceed to login";
         return  StandardResponse<string>.Success(successMsg, statusCode: 201);
+    }
+
+    public async Task<StandardResponse<string>>
+        LoginAsync(LoginDto loginDto)
+    {
+        var user = await _userManager.FindByEmailAsync(loginDto.userEmail);
+        if (user is not null)
+        {
+            var signInResult = await _userManager.CheckPasswordAsync(user, loginDto.password);
+            if (signInResult)
+            {
+                string successMsg = "Login successful";
+                return StandardResponse<string>.Success(data: , successMessage: successMsg);
+            }
+        }
+        string errorMsg = "Invalid user credentials";
+        return StandardResponse<string>.Failed(data: null, errorMessage: errorMsg);
     }
 
     public async Task<StandardResponse<string>>
