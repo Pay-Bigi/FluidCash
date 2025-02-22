@@ -6,6 +6,9 @@ namespace FluidCash.IServiceRepo;
 public interface IAuthServices
 {
     Task<StandardResponse<string>>
+        CreateAccountAsync(CreateAccountDto createAccountDto);
+
+    Task<StandardResponse<string>>
     SetTransactionPasswordWithOtpAsync
     (TransactionPasswordParams passwordParams);
 
