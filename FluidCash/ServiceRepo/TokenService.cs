@@ -3,6 +3,8 @@ using FluidCash.IServiceRepo;
 using FluidCash.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
@@ -10,15 +12,12 @@ namespace FluidCash.ServiceRepo;
 
 public sealed class TokenService : ITokenService
 {
-    private readonly IConfiguration _configuration;
     private readonly UserManager<AppUser> _userManager;
     private readonly JwtSettings _jwtSettings;
-    public TokenService(IConfiguration configuration,
-        UserManager<AppUser> userManager,
+    public TokenService(UserManager<AppUser> userManager,
         IOptions<JwtSettings> jwtSettings)
     {
         _userManager = userManager;
-        _configuration = configuration;
         _jwtSettings = jwtSettings.Value;
     }
 

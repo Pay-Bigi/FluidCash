@@ -12,13 +12,15 @@ public class AuthServices : IAuthServices
     private readonly IBaseRepo<Account> _accountRepo;
     private readonly ICloudinaryServices _cloudinaryServices;
     private readonly UserManager<AppUser> _userManager;
+    private readonly ITokenService _tokenService;
 
     public AuthServices(IBaseRepo<Account> accountRepo, ICloudinaryServices cloudinaryServices,
-        UserManager<AppUser> userManager)
+        UserManager<AppUser> userManager, ITokenService tokenService)
     {
         _accountRepo = accountRepo;
         _cloudinaryServices = cloudinaryServices;
         _userManager = userManager;
+        _tokenService = tokenService;
     }
 
     public async Task<StandardResponse<string>>
@@ -61,8 +63,9 @@ public class AuthServices : IAuthServices
             var signInResult = await _userManager.CheckPasswordAsync(user, loginDto.password);
             if (signInResult)
             {
+                var token = await _tokenService.CreateTokenAsync(user);
                 string successMsg = "Login successful";
-                return StandardResponse<string>.Success(data: , successMessage: successMsg);
+                return StandardResponse<string>.Success(data: token, successMessage: successMsg);
             }
         }
         string errorMsg = "Invalid user credentials";
