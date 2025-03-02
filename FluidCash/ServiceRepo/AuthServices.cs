@@ -83,7 +83,7 @@ public class AuthServices : IAuthServices
             return StandardResponse<string>.Failed(data: null, errorMessage: errorMsg);
         }
         var token = await _userManager.GenerateUserTokenAsync(user, "NumericPasswordReset", "ResetPassword");
-        var otpUpdateResponse = await ResetAndUpdateOtpAsync(user, authToken: token);
+        var otpUpdateResponse = await ResetAndSendOtpAsync(user, authToken: token);
         return otpUpdateResponse;
     }
 
@@ -166,7 +166,7 @@ public class AuthServices : IAuthServices
     }
 
     private async Task<StandardResponse<string>>
-       ResetAndUpdateOtpAsync
+       ResetAndSendOtpAsync
        (AppUser? appUser, string? authToken)
     {
         string successMsg = string.Empty;
