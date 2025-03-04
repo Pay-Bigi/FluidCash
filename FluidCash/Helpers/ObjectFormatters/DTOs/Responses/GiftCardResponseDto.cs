@@ -4,9 +4,5 @@ public record GiftCardResponseDto
 (
     string? category,
     string? subCategory,
-    string? countryCode,
-    string? currency,
-    decimal rate,
-    string? giftCardId,
-    string? giftCardRateId
+    IEnumerable<GiftCardRateResponseDto> GiftCardRates
 );

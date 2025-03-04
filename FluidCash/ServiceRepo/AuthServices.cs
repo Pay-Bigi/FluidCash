@@ -1,10 +1,12 @@
 ﻿using FluidCash.DataAccess.Repo;
 using FluidCash.Helpers.ObjectFormatters.DTOs.Requests;
 using FluidCash.Helpers.ObjectFormatters.ObjectWrapper;
+using FluidCash.IExternalServicesRepo;
 using FluidCash.IServiceRepo;
 using FluidCash.Models;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Cryptography;
+using IEmailSender = FluidCash.IExternalServicesRepo.IEmailSender;
 
 namespace FluidCash.ServiceRepo;
 
@@ -14,14 +16,19 @@ public class AuthServices : IAuthServices
     private readonly ICloudinaryServices _cloudinaryServices;
     private readonly UserManager<AppUser> _userManager;
     private readonly ITokenService _tokenService;
+    private readonly IRedisCacheService _redisCacheService;
+    private readonly IEmailSender _emailSender;
 
     public AuthServices(IBaseRepo<Account> accountRepo, ICloudinaryServices cloudinaryServices,
-        UserManager<AppUser> userManager, ITokenService tokenService)
+        UserManager<AppUser> userManager, ITokenService tokenService, IRedisCacheService redisCacheService, 
+        IEmailSender emailSender)
     {
         _accountRepo = accountRepo;
         _cloudinaryServices = cloudinaryServices;
         _userManager = userManager;
         _tokenService = tokenService;
+        _redisCacheService = redisCacheService;
+        _emailSender = emailSender;
     }
 
     public async Task<StandardResponse<string>>
@@ -79,11 +86,11 @@ public class AuthServices : IAuthServices
         var user = await _userManager.FindByEmailAsync(userEmail);
         if (user is null)
         {
-            string errorMsg = "Incorrect auth credentials";
+            string errorMsg = "Invalid credentials";
             return StandardResponse<string>.Failed(data: null, errorMessage: errorMsg);
         }
         var token = await _userManager.GenerateUserTokenAsync(user, "NumericPasswordReset", "ResetPassword");
-        var otpUpdateResponse = await ResetAndSendOtpAsync(user, authToken: token);
+        var otpUpdateResponse = await ResetAndSendOtpAsync(user.Email, user.UserName, authToken: token);
         return otpUpdateResponse;
     }
 
@@ -98,7 +105,7 @@ public class AuthServices : IAuthServices
             errorMsg = "Incorrect auth credentials";
             return StandardResponse<string>.Failed(data: null, errorMessage: errorMsg);
         }
-        var confirmOtpResponse = ConfirmOtp(user.Email, resetPasswordWIthOtpParams.otp);
+        var confirmOtpResponse = await ConfirmOtp(user.Email, resetPasswordWIthOtpParams.otp);
         if (!confirmOtpResponse)
         {
             errorMsg = "Invalid or expired token";
@@ -112,6 +119,21 @@ public class AuthServices : IAuthServices
         }
         string successMsg = "Password reset successful. Kindly proceed to login";
         return StandardResponse<string>.Success(data: successMsg);
+    }
+
+    public async Task<StandardResponse<string>>
+        SetTransactionPasswordAsync
+        (string userEmail)
+    {
+        var appUser = await _userManager.FindByEmailAsync(userEmail);
+        if (appUser is null)
+        {
+            string errorMsg = "Invalid credentials";
+            return StandardResponse<string>.Failed(data: null, errorMessage: errorMsg);
+        }
+        string token = string.Empty;
+        var otpUpdateResponse = await ResetAndSendOtpAsync(appUser.Email, appUser.UserName, token);
+        return otpUpdateResponse;
     }
 
     public async Task<StandardResponse<string>>
@@ -153,49 +175,94 @@ public class AuthServices : IAuthServices
         return StandardResponse<bool>.Success(data: true);
     }
 
+    #region Private Methods
+
     //Used to confirm otp sent to a user. Ensure to persist changes on calling method. 
-    private bool
+    private async Task<bool>
         ConfirmOtp
         (string userMail, string otp)
     {
         //confirm OTP from Redis using encrypted user mail as key
-        //Check expiry time of OTP
-
-        bool isOtpValid = true;
-        return isOtpValid;
+        var otoExists = await _redisCacheService.ExistsAsync(userMail);
+        var otpRemoved = await _redisCacheService.RemoveAsync(userMail);
+        return otoExists;
     }
 
     private async Task<StandardResponse<string>>
        ResetAndSendOtpAsync
-       (AppUser? appUser, string? authToken)
+       (string? userEmail, string? userName, string? authToken)
     {
         string successMsg = string.Empty;
         string errorMsg = string.Empty;
-        if (appUser is null)
+        authToken = await ResetOtpTrackers(userEmail, authToken);
+        if (string.IsNullOrWhiteSpace(authToken))
         {
-            errorMsg = "Request failed. Invalid credentials";
-            return StandardResponse<string>.Failed(data: null, errorMsg);
+            errorMsg = "Failed to generate OTP. Request failed";
+            return StandardResponse<string>.Failed(data: null, errorMessage: errorMsg);
         }
-        authToken = ResetOtpTrackers(appUser.Id, authToken);
-        await SendOTPMailAsync(appUser.UserName, appUser.Email, authToken);
+        await SendOTPMailAsync(userEmail, userName, authToken);
 
-        await _userManager.UpdateAsync(appUser);
         successMsg = "OTP sent successfully. Kindly confirm otp";
         return StandardResponse<string>.Success(data: successMsg);
     }
 
+    //Sends auth mail otp to specified email address. 
+    private async Task<StandardResponse<string>>
+        SendOTPMailAsync
+        (string? userEmail, string? userName, string otp)
+    {
+        var emailRecipientDetails = new[] { new EmailRecipientInfo(userName, userEmail) };
+        string senderEmail = "paybigie@gmail.com";
+        string callingEndpoint = "callingEndpoint";
+        string? organizationLogoUrl = "organizationLogoUrl";
+        string? organizationName = "PayBigi";
+        string? organizationWebUrl = "organizationWebUrl";
+        string? linkedinHandleUrl = "linkedinHandleUrl";
+        string? twitterHandleUrl = "twitterHandleUrl";
+        string? mailSubject = "Email Confirmation";
+        string? mailBody = $"Kindly use the otp: {otp} to complete your request.\n The otp expires after 5 minutes.";
+        bool isHtml = true;
+        string? mailTemplateName = string.Empty;
+        ICollection<EmailRecipientInfo>? mailRecipientsInfo = emailRecipientDetails;
+        string[]? fileAttachmentPaths = null;
+
+
+        var mailToUser = new SendEmailParams
+        {
+            senderEmail = senderEmail,
+            callingEndpoint = callingEndpoint,
+            organizationLogoUrl = organizationLogoUrl,
+            organizationName = organizationName,
+            organizationWebUrl = organizationWebUrl,
+            linkedinHandleUrl = linkedinHandleUrl,
+            twitterHandleUrl = twitterHandleUrl,
+            mailSubject = mailSubject,
+            mailBody = mailBody,
+            isHtml = isHtml,
+            mailTemplateName = mailTemplateName,
+            mailRecipientsInfo = mailRecipientsInfo,
+            fileAttachmentPaths = fileAttachmentPaths
+        };
+        var sentMailResponse = await _emailSender.ProcessAndSendEmailAsync(mailToUser);
+
+        return sentMailResponse;
+    }
 
     //Resets and sets new otp details for a specified user. Ensure to persist chnages on calling method
-    private string
+    private async Task<string>
         ResetOtpTrackers
-        (string userId, string? authToken)
+        (string userEmail, string? authToken)
     {
         if (string.IsNullOrWhiteSpace(authToken))
         {
             authToken = GenerateOtp();
         }
         //Cache OTP in Redis using encrypted user mail as key
-       
+        var isCached = await _redisCacheService.SetAsync(userEmail, authToken, TimeSpan.FromMinutes(5));
+        if (!isCached)
+        {
+            return string.Empty;
+        }
         return authToken;
     }
 
@@ -215,4 +282,6 @@ public class AuthServices : IAuthServices
         string otp = (randomValue % 10000).ToString("D5");
         return otp;
     }
+
+    #endregion
 }

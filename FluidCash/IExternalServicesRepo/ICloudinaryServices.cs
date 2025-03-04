@@ -1,7 +1,7 @@
 ﻿using FluidCash.Helpers.ObjectFormatters.DTOs.Responses;
 using FluidCash.Helpers.ObjectFormatters.ObjectWrapper;
 
-namespace FluidCash.IServiceRepo;
+namespace FluidCash.IExternalServicesRepo;
 
 public interface ICloudinaryServices
 {

@@ -17,4 +17,6 @@ public class DataContext:IdentityDbContext
     public DbSet<WalletTransaction> WalletTransactions { get; set; }
     public DbSet<Wallet> Wallets { get; set; }
     public DbSet<BankDetail> BankDetails { get; set; }
+    public DbSet<EmailLog> EmailLogs { get; set; }
+    public DbSet<EmailTemplate> EmailTemplates { get; set; }
 }

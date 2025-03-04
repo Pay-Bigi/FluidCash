@@ -12,7 +12,7 @@ public interface IGiftCardServices
     Task<StandardResponse<string>>
         UpdateGiftCardAsync(UpdateGiftCardDto updateGiftCardDto);
 
-    Task<StandardResponse<GiftCardResponseDto>>
+    Task<StandardResponse<IEnumerable<GiftCardResponseDto>>>
         GetGiftCardAsync(GetGiftCardDto getGiftCardDto);
 
     Task<StandardResponse<string>>
@@ -24,7 +24,7 @@ public interface IGiftCardServices
     Task<StandardResponse<string>>
         UpdateGiftCardRateAsync(UpdateGiftCardRateDto updateGiftCardDto);
 
-    Task<StandardResponse<GiftCardRateResponseDto>>
+    Task<StandardResponse<IEnumerable<GiftCardRateResponseDto>>>
         GetGiftCardRateAsync(GetGiftCardRateDto getGiftCardDto);
 
     Task<StandardResponse<string>>

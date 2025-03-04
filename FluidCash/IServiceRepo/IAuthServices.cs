@@ -9,8 +9,22 @@ public interface IAuthServices
         CreateAccountAsync(CreateAccountDto createAccountDto);
 
     Task<StandardResponse<string>>
-    SetTransactionPasswordWithOtpAsync
-    (TransactionPasswordParams passwordParams);
+        LoginAsync(LoginDto loginDto);
+
+    Task<StandardResponse<string>>
+    ResetPasswordAsync(string userEmail);
+
+    Task<StandardResponse<string>>
+        ResetPasswordWIthOtpAsync
+        (ResetPasswordWIthOtpParams resetPasswordWIthOtpParams);
+
+    Task<StandardResponse<string>>
+        SetTransactionPasswordAsync
+        (string userEmail);
+
+    Task<StandardResponse<string>>
+        SetTransactionPasswordWithOtpAsync
+        (TransactionPasswordParams passwordParams);
 
     Task<StandardResponse<bool>>
         VerifyTransactionPasswordAsync

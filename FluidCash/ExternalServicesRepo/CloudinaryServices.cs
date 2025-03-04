@@ -2,10 +2,10 @@
 using CloudinaryDotNet.Actions;
 using FluidCash.Helpers.ObjectFormatters.DTOs.Responses;
 using FluidCash.Helpers.ObjectFormatters.ObjectWrapper;
-using FluidCash.IServiceRepo;
+using FluidCash.IExternalServicesRepo;
 using System.Text.RegularExpressions;
 
-namespace FluidCash.ServiceRepo;
+namespace FluidCash.ExternalServicesRepo;
 
 public class CloudinaryServices : ICloudinaryServices
 {

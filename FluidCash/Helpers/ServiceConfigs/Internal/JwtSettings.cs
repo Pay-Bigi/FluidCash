@@ -3,7 +3,7 @@
 public class JwtSettings
 {
     public string? TokenKey { get; set; }
-    public string? validAudience { get; set; }
-    public string? validIssuer { get; set; }
+    public string? ValidAudience { get; set; }
+    public string? ValidIssuer { get; set; }
     public string? Expires { get; set; }
 }
