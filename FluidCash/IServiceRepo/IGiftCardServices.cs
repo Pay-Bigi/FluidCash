@@ -6,8 +6,6 @@ namespace FluidCash.IServiceRepo;
 
 public interface IGiftCardServices
 {
-    Task<StandardResponse<string>> 
-        CreateGiftCardAsync(CreateGiftCardDto createGiftCardDto, string? userId);
 
     Task<StandardResponse<string>>
         UpdateGiftCardAsync(UpdateGiftCardDto updateGiftCardDto, string? userId);
@@ -28,5 +26,5 @@ public interface IGiftCardServices
         GetGiftCardRateAsync(GetGiftCardRateDto getGiftCardDto);
 
     Task<StandardResponse<string>>
-        DeleteGiftCardRateAsync(string giftCardId, string? userId);
+        DeleteGiftCardRateAsync(string giftCardRateId, string? userId);
 }

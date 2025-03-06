@@ -75,6 +75,22 @@ public sealed class BaseRepo<T> : IBaseRepo<T> where T : class, IBaseEntity
         _dbSet.Remove(entity);
     }
 
+    public void
+        SoftDelete(T entity)
+    {
+        entity.IsDeleted = true;
+    }
+
+    public void
+        SoftDeleteRange
+        (IEnumerable<T> entities)
+    {
+        foreach (var entity in entities)
+        {
+            entity.IsDeleted = true;
+        }
+    }
+
     public async Task SaveChangesAsync()
     {
         await _dataContext.SaveChangesAsync();

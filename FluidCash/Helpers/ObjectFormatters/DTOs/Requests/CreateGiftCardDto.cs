@@ -2,7 +2,7 @@
 
 public record CreateGiftCardDto
 (
-    string? Category,
-    string? SubCategory,
+    string? category,
+    string? subCategory,
     string? giftCardRateId
 );

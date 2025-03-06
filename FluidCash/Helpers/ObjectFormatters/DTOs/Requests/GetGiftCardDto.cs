@@ -3,11 +3,7 @@
 public record GetGiftCardDto
 (
     string? category,
-    string? subCategory,
-    string? countryCode,
-    string? currency,
-    decimal rate,
-    string? giftCardId,
-    string? giftCardRateId
+    string? subCategory,    
+    string? giftCardId
 );
     
