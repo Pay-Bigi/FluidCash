@@ -3,7 +3,7 @@
 public record UpdateGiftCardDto
 (
     string? giftCardId,
-    string? Category,
-    string? SubCategory,
+    string? category,
+    string? subCategory,
     string? giftCardRateId
 );

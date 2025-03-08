@@ -80,7 +80,9 @@ public class GiftCardServices : IGiftCardServices
         return StandardResponse<string>.Success(successMsg);
     }
 
-    public async Task<StandardResponse<IEnumerable<GiftCardResponseDto>>> GetGiftCardAsync(GetGiftCardDto getGiftCardDto)
+    public async Task<StandardResponse<IEnumerable<GiftCardResponseDto>>> 
+        GetGiftCardAsync
+        (GetGiftCardDto getGiftCardDto)
     {
         // Base query: Get non-deleted gift cards by ID
         var query = _giftCardRepo.GetNonDeletedByCondition(crd => crd.Id == getGiftCardDto.giftCardId);
@@ -97,6 +99,13 @@ public class GiftCardServices : IGiftCardServices
             var subCategory = getGiftCardDto.subCategory.ToLower();
             query = query.Where(x => EF.Functions.Like(x.SubCategory.ToLower(), $"%{subCategory}%"));
         }
+
+        if (!string.IsNullOrWhiteSpace(getGiftCardDto?.giftCardRateId))
+        {
+            var giftCardRateId = getGiftCardDto.giftCardRateId.Trim();
+            query = query.Where(x => x.GiftCardRates.Any(rate => rate.Id == giftCardRateId));
+        }
+
 
         // Execute query
         var giftCards = await query
@@ -119,9 +128,13 @@ public class GiftCardServices : IGiftCardServices
             : StandardResponse<IEnumerable<GiftCardResponseDto>>.Failed(data: null, errorMessage: "No gift cards found.");
     }
 
-    public Task<StandardResponse<IEnumerable<GiftCardRateResponseDto>>> GetGiftCardRateAsync(GetGiftCardRateDto getGiftCardRateDto)
+    public async Task<StandardResponse<IEnumerable<GiftCardRateResponseDto>>> 
+        GetGiftCardRateAsync
+        (GetGiftCardRateDto getGiftCardRateDto)
     {// Base query: Get non-deleted gift cards by ID
-        var query = _giftCardRateRepo.GetNonDeletedByCondition(crd => crd.Id == getGiftCardRateDto.giftCardRateId);
+        string? cardRateId = getGiftCardRateDto.giftCardRateId;
+        var query = _giftCardRateRepo.GetNonDeletedByCondition(crd => 
+        EF.Functions.Like( crd.Id,  $"%{cardRateId}%" ));
 
         // Apply filters if provided
         if (!string.IsNullOrWhiteSpace(getGiftCardRateDto.countryCode))
@@ -136,33 +149,69 @@ public class GiftCardServices : IGiftCardServices
             query = query.Where(x => EF.Functions.Like(x.Currency.ToLower(), $"%{currency}%"));
         }
 
+        if (getGiftCardRateDto.rate.HasValue)
+        {
+            var rate = getGiftCardRateDto.rate;
+            query = query.Where(x => x.Rate == rate);
+        }
+
+
+        if (!string.IsNullOrWhiteSpace(getGiftCardRateDto.giftCardId))
+        {
+            var cardId = getGiftCardRateDto.giftCardId.ToLower();
+            query = query.Where(x => EF.Functions.Like(x.GiftCardId.ToLower(), $"%{cardId}%"));
+        }
+
         // Execute query
-        var giftCards = await query
-            .Select(x => new GiftCardResponseDto(
-                x.GiftCard.Category,
-                x.GiftCard.SubCategory,
-                x.Select(y => new GiftCardRateResponseDto(
+        var giftCardRates = await query
+            .Select(x => 
+                new GiftCardRateResponseDto(
                     x.CountryCode,
                     x.Currency,
-                    y.Rate,
+                    x.Rate,
                     getGiftCardRateDto.giftCardId,
-                    y.Id
-                ))
-            ))
-            .ToListAsync();
+                    x.Id
+                )
+            ).ToListAsync();
 
         // Return result
-        return giftCards.Any()
-            ? StandardResponse<IEnumerable<GiftCardResponseDto>>.Success(giftCards)
-            : StandardResponse<IEnumerable<GiftCardResponseDto>>.Failed(data: null, errorMessage: "No gift cards found.");
+        return giftCardRates.Any()
+            ? StandardResponse<IEnumerable<GiftCardRateResponseDto>>.Success(giftCardRates)
+            : StandardResponse<IEnumerable<GiftCardRateResponseDto>>.Failed(data: null, errorMessage: "No gift cards found.");
     }
 
-    public Task<StandardResponse<string>> UpdateGiftCardAsync(UpdateGiftCardDto updateGiftCardDto, string? userId)
+    public async Task<StandardResponse<string>> 
+        UpdateGiftCardAsync
+        (UpdateGiftCardDto updateGiftCardDto, string? userId)
     {
-        throw new NotImplementedException();
+        // Base query: Get non-deleted gift cards by ID
+        var query = _giftCardRepo.GetNonDeletedByCondition(crd => crd.Id == updateGiftCardDto.giftCardId).FirstOrDefault();
+
+        // Apply filters if provided
+        if (!string.IsNullOrWhiteSpace(updateGiftCardDto.category))
+        {
+            query.Category = updateGiftCardDto.category;
+        }
+
+        if (!string.IsNullOrWhiteSpace(updateGiftCardDto.subCategory))
+        {
+            query.SubCategory = updateGiftCardDto.subCategory;
+        }
+
+        if (!string.IsNullOrWhiteSpace(updateGiftCardDto?.giftCardRateId))
+        {
+            var giftCardRate = _giftCardRateRepo.GetNonDeletedByCondition(x => x.Id == updateGiftCardDto.giftCardRateId).FirstOrDefault();
+            query.GiftCardRates.Add(giftCardRate);
+        }
+        await _giftCardRepo.SaveChangesAsync();
+
+        string successMsg = "Giftcard update successful";
+        return StandardResponse<string>.Success(successMsg);
     }
 
-    public Task<StandardResponse<string>> UpdateGiftCardRateAsync(UpdateGiftCardRateDto updateGiftCardDto, string? userId)
+    public Task<StandardResponse<string>> 
+        UpdateGiftCardRateAsync
+        (UpdateGiftCardRateDto updateGiftCardDto, string? userId)
     {
         throw new NotImplementedException();
     }

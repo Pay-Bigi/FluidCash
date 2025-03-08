@@ -4,6 +4,7 @@ public record GetGiftCardDto
 (
     string? category,
     string? subCategory,    
-    string? giftCardId
+    string? giftCardId,
+    string? giftCardRateId
 );
     

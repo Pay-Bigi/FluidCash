@@ -4,7 +4,7 @@ public record GetGiftCardRateDto
 (
     string? countryCode,
     string? currency,
-    decimal rate,
+    decimal? rate,
     string? giftCardId,
     string? giftCardRateId
 );
