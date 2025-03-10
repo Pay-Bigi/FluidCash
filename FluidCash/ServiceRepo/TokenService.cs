@@ -40,8 +40,8 @@ public sealed class TokenService : ITokenService
         {
             Subject = new ClaimsIdentity(claim),
             IssuedAt = DateTime.UtcNow,//Had to remove .AddHour(1) because it automatically add one hour for some reason
-            Issuer = _jwtSettings.validIssuer,
-            Audience = _jwtSettings.validAudience,
+            Issuer = _jwtSettings.ValidIssuer,
+            Audience = _jwtSettings.ValidAudience,
             Expires = DateTime.UtcNow.AddMinutes(Double.Parse(_jwtSettings.Expires)),
             SigningCredentials = credentials,
         };

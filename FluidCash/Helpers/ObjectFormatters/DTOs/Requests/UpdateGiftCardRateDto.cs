@@ -5,5 +5,5 @@ public record UpdateGiftCardRateDto
     string? giftCardRateId,
     string? countryCode,
     string? currency,
-    decimal rate
+    decimal? rate
 );

@@ -49,7 +49,6 @@ public class GiftCardServices : IGiftCardServices
         return StandardResponse<string>.Success(message);
     }
 
-
     public async Task<StandardResponse<string>> 
         DeleteGiftCardAsync
         (string giftCardId, string? userId)
@@ -203,16 +202,41 @@ public class GiftCardServices : IGiftCardServices
             var giftCardRate = _giftCardRateRepo.GetNonDeletedByCondition(x => x.Id == updateGiftCardDto.giftCardRateId).FirstOrDefault();
             query.GiftCardRates.Add(giftCardRate);
         }
+        query.UpdatedBy = userId;
+        query.UpdatedAt = DateTime.UtcNow;
         await _giftCardRepo.SaveChangesAsync();
 
         string successMsg = "Giftcard update successful";
         return StandardResponse<string>.Success(successMsg);
     }
 
-    public Task<StandardResponse<string>> 
+    public async Task<StandardResponse<string>> 
         UpdateGiftCardRateAsync
-        (UpdateGiftCardRateDto updateGiftCardDto, string? userId)
+        (UpdateGiftCardRateDto updateGiftCardRateDto, string? userId)
     {
-        throw new NotImplementedException();
+        // Base query: Get non-deleted gift card rate by ID
+        var query = _giftCardRateRepo.GetNonDeletedByCondition(crd => crd.Id == updateGiftCardRateDto.giftCardRateId).FirstOrDefault();
+
+        // Apply filters if provided
+        if (!string.IsNullOrWhiteSpace(updateGiftCardRateDto.countryCode))
+        {
+            query.CountryCode = updateGiftCardRateDto.countryCode;
+        }
+
+        if (!string.IsNullOrWhiteSpace(updateGiftCardRateDto.currency))
+        {
+            query.Currency = updateGiftCardRateDto.currency;
+        }
+
+        if (updateGiftCardRateDto.rate.HasValue)
+        {
+            query.Rate = updateGiftCardRateDto.rate.Value;
+        }
+        query.UpdatedBy = userId;
+        query.UpdatedAt = DateTime.UtcNow;
+        await _giftCardRateRepo.SaveChangesAsync();
+
+        string successMsg = "Giftcard rate update successful";
+        return StandardResponse<string>.Success(successMsg);
     }
 }
