@@ -1,8 +1,10 @@
-﻿namespace FluidCash.Models;
+﻿using FluidCash.Helpers.Enums;
+
+namespace FluidCash.Models;
 
 public class WalletTransaction
 {
-    public string? TransactionType { get; set; }
+    public TransactionType? Type { get; set; }
     public string? TransactionReference { get; set; }
     public decimal Amount { get; set; }
     public string? OtherDetails { get; set; }

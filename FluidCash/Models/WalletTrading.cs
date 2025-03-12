@@ -4,7 +4,8 @@ namespace FluidCash.Models;
 
 public class WalletTrading: BaseEntity
 {
-    public TradeType? TradeType { get; set; }
+    public TradingStatus? Status { get; set; }
+    public TradeType? Type { get; set; }
     public DateTime? ValidUntil { get; set; }
     public string? OtherDetails { get; set; }
     public string? ExchangeValue { get; set; }

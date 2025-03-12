@@ -12,18 +12,18 @@ namespace FluidCash.ServiceRepo;
 
 public class AuthServices : IAuthServices
 {
-    private readonly IBaseRepo<Account> _accountRepo;
+    private readonly IAccountMgtServices _accountMgtServices;
     private readonly ICloudinaryServices _cloudinaryServices;
     private readonly UserManager<AppUser> _userManager;
     private readonly ITokenService _tokenService;
     private readonly IRedisCacheService _redisCacheService;
     private readonly IEmailSender _emailSender;
 
-    public AuthServices(IBaseRepo<Account> accountRepo, ICloudinaryServices cloudinaryServices,
+    public AuthServices(IAccountMgtServices accountMgtServices, ICloudinaryServices cloudinaryServices,
         UserManager<AppUser> userManager, ITokenService tokenService, IRedisCacheService redisCacheService, 
         IEmailSender emailSender)
     {
-        _accountRepo = accountRepo;
+        _accountMgtServices = accountMgtServices;
         _cloudinaryServices = cloudinaryServices;
         _userManager = userManager;
         _tokenService = tokenService;
@@ -39,10 +39,10 @@ public class AuthServices : IAuthServices
             Email = createAccountDto.userEmail,
             UserName = createAccountDto.userEmail
         };
-        var userAccount = new Account
+        var userAccount = new CreateUserAccountDto
         {
-            DisplayName = createAccountDto.displayName,
-            AppUserId = appUser.Id
+            displayName = createAccountDto.displayName,
+            appUserId = appUser.Id
         };
         if (createAccountDto.dpImage is not null)
         {
@@ -50,13 +50,12 @@ public class AuthServices : IAuthServices
             var imageUploadDetails = await _cloudinaryServices.UploadFileToCloudinaryAsync(imageFile);
             if (imageUploadDetails.Status)
             {
-                userAccount.DpUrl = imageUploadDetails.Data.fileUrlPath;
-                userAccount.DpCloudinaryId = imageUploadDetails.Data.filePublicId;
+                userAccount.dpUrl = imageUploadDetails.Data.fileUrlPath;
+                userAccount.dpCloudinaryId = imageUploadDetails.Data.filePublicId;
             }
         }
-        var userCreationResponse = await _userManager.CreateAsync(appUser, createAccountDto.password);
-        await _accountRepo.AddAsync(userAccount);
-        await _accountRepo.SaveChangesAsync();
+         await _userManager.CreateAsync(appUser, createAccountDto.password);
+         await _accountMgtServices.CreateUserAccountAsync(userAccount);
 
         string? successMsg = "Account successfully created. Proceed to login";
         return  StandardResponse<string>.Success(successMsg, statusCode: 201);
@@ -151,7 +150,7 @@ public class AuthServices : IAuthServices
         string hashedPassword = pwHasher.HashPassword(passwordParams.userId, passwordParams.transactionPassword);
         appUser.HashedTransactionPin = hashedPassword;
 
-        await _accountRepo.SaveChangesAsync();
+        await _userManager.UpdateAsync(appUser);
 
         string successMsg = "Transaction password successfully set";
         return StandardResponse<string>.Success(data: successMsg);
