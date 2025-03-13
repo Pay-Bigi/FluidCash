@@ -108,11 +108,21 @@ public sealed class TradingServices : ITradingServices
         return StandardResponse<WalletTradingResponse>.Success(tradeResponse);
     }
 
-    public Task<StandardResponse<string>> 
+    public async Task<StandardResponse<string>> 
         DeleteTradeAync
         (string tradeId, string userId)
     {
-        throw new NotImplementedException();
+        var tradeToDelete = _tradingRepo.GetByCondition(x => x.Id == tradeId).FirstOrDefault();
+        if (tradeToDelete is null)
+        {
+            string? errorMessage = "Trade not found";
+            return StandardResponse<string>.Failed(null, errorMessage);
+        }
+        _tradingRepo.SoftDelete(tradeToDelete);
+        await _tradingRepo.SaveChangesAsync();
+
+        string? successMessage = "Trade deleted successfully";
+        return StandardResponse<string>.Success(successMessage);
     }
 
     public Task<StandardResponse<IEnumerable<WalletTradingResponse>>> 
