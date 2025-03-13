@@ -3,6 +3,7 @@
 public record BuyGiftCardDto
 (
     string? giftCardId,
+    string? giftCardRateId,
     decimal amount,
     string? walletId
 );

@@ -8,7 +8,7 @@ public class WalletTrading: BaseEntity
     public TradeType? Type { get; set; }
     public DateTime? ValidUntil { get; set; }
     public string? OtherDetails { get; set; }
-    public string? ExchangeValue { get; set; }
+    public decimal? ExchangeValue { get; set; }
     public string? CardImageUrl { get; set; }
     public decimal CardAmount { get; set; }
     public decimal ExchangeRate { get; set; }

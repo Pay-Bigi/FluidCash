@@ -12,11 +12,16 @@ public sealed class TradingServices : ITradingServices
 {
     private readonly IBaseRepo<WalletTrading> _tradingRepo;
     private readonly IBaseRepo<Wallet> _walletRepo;
+    private readonly IBaseRepo<WalletTransaction> _transactionRepo;
+    private readonly IGiftCardServices _giftCardServices;
 
-    public TradingServices(IBaseRepo<WalletTrading> tradingRepo, IBaseRepo<Wallet> walletRepo)
+    public TradingServices(IBaseRepo<WalletTrading> tradingRepo, IBaseRepo<Wallet> walletRepo,
+        IBaseRepo<WalletTransaction> transactionRepo, IGiftCardServices giftCardServices)
     {
         _tradingRepo = tradingRepo;
         _walletRepo = walletRepo;
+        _transactionRepo = transactionRepo;
+        _giftCardServices = giftCardServices;
     }
 
     public async Task<StandardResponse<string>> 
@@ -24,7 +29,7 @@ public sealed class TradingServices : ITradingServices
         (ApproveGiftCardDto approveGiftCardDto, string userId)
     {
         var trade = _tradingRepo.GetByCondition(x => x.Id == approveGiftCardDto.tradeId).FirstOrDefault();
-        if (trade == null)
+        if (trade is null)
         {
             string? errorMessage = "Trade not found";
             return StandardResponse<string>.Failed(null, errorMessage);
@@ -48,25 +53,28 @@ public sealed class TradingServices : ITradingServices
         BuyGiftCardAsync
         (BuyGiftCardDto buyGiftCardDto, string userId)
     {
-        var cardToBuyExists = await _tradingRepo.ExistsByCondition(x => x.Id == buyGiftCardDto.giftCardId);
+        var cardToBuyExists = await _giftCardServices.ConfirmCardExistsAsync(buyGiftCardDto.giftCardId);
 
         if (!cardToBuyExists)
         {
-            string? errorMessage = "Gift card not found";
+            string? errorMessage = "Card currently unavailable. Try again later";
             return StandardResponse<WalletTradingResponse>.Failed(null, errorMessage);
         }
         var walletExists = await _walletRepo.ExistsByCondition(x => x.Id == buyGiftCardDto.walletId);
 
         if (!walletExists)
         {
-            string? errorMessage = "Trading wallet not found";
+            string? errorMessage = "Invalid wallet account";
             return StandardResponse<WalletTradingResponse>.Failed(null, errorMessage);
         }
+        var exchangeRate = await _giftCardServices.GetGiftCardRateByIdAsync(buyGiftCardDto.giftCardRateId);
         var trade = new WalletTrading
         {
             Status = TradingStatus.Pending,
             Type = TradeType.Buy,
+            ExchangeValue = exchangeRate * buyGiftCardDto.amount,
             CardAmount = buyGiftCardDto.amount,
+            ExchangeRate = exchangeRate,
             GiftCardId = buyGiftCardDto.giftCardId,
             WalletId = buyGiftCardDto.walletId
         };
@@ -79,8 +87,25 @@ public sealed class TradingServices : ITradingServices
             TradingId = trade.Id
         };
         await _tradingRepo.AddAsync(trade);
-        await _walletRepo.AddAsync(transaction);
+        await _transactionRepo.AddAsync(transaction);
         await _tradingRepo.SaveChangesAsync();
+
+        var exchangeValue = trade.ExchangeValue;
+        var tradeResponse = new WalletTradingResponse
+        (
+            tradeId: trade.Id,
+            exchangeValue: trade.ExchangeValue,
+            cardImageUrl: trade.CardImageUrl,
+            cardAmount: trade.CardAmount,
+            exchangeRate: trade.ExchangeRate,
+            tradeDateTime: trade.CreatedAt,
+            tradeType: trade.Type,
+            validUntil: trade.ValidUntil,
+            otherDetails: trade.OtherDetails,
+            giftCardId: trade.GiftCardId,
+            walletId: trade.WalletId
+        );
+        return StandardResponse<WalletTradingResponse>.Success(tradeResponse);
     }
 
     public Task<StandardResponse<string>> 

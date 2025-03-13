@@ -6,6 +6,11 @@ namespace FluidCash.IServiceRepo;
 
 public interface IGiftCardServices
 {
+    Task<decimal>
+        GetGiftCardRateByIdAsync(string giftCardRateId);
+
+    Task<bool>
+        ConfirmCardExistsAsync(string? giftCardId);
 
     Task<StandardResponse<string>>
         UpdateGiftCardAsync(UpdateGiftCardDto updateGiftCardDto, string? userId);

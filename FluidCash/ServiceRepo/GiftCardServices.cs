@@ -84,9 +84,15 @@ public class GiftCardServices : IGiftCardServices
         (GetGiftCardDto getGiftCardDto)
     {
         // Base query: Get non-deleted gift cards by ID
-        var query = _giftCardRepo.GetNonDeletedByCondition(crd => crd.Id == getGiftCardDto.giftCardId);
+        var query = _giftCardRepo.GetAllNonDeleted();
 
         // Apply filters if provided
+        if (!string.IsNullOrWhiteSpace(getGiftCardDto.giftCardId))
+        {
+            var giftCardId = getGiftCardDto.giftCardId.ToLower();
+            query = query.Where(x => EF.Functions.Like(x.Id.ToLower(), $"%{giftCardId}%"));
+        }
+
         if (!string.IsNullOrWhiteSpace(getGiftCardDto.category))
         {
             var category = getGiftCardDto.category.ToLower();
@@ -104,7 +110,6 @@ public class GiftCardServices : IGiftCardServices
             var giftCardRateId = getGiftCardDto.giftCardRateId.Trim();
             query = query.Where(x => x.GiftCardRates.Any(rate => rate.Id == giftCardRateId));
         }
-
 
         // Execute query
         var giftCards = await query
@@ -125,6 +130,17 @@ public class GiftCardServices : IGiftCardServices
         return giftCards.Any()
             ? StandardResponse<IEnumerable<GiftCardResponseDto>>.Success(giftCards)
             : StandardResponse<IEnumerable<GiftCardResponseDto>>.Failed(data: null, errorMessage: "No gift cards found.");
+    }
+
+    public async Task<decimal>
+        GetGiftCardRateByIdAsync(string giftCardRateId)
+    {
+        var rate = await _giftCardRateRepo.GetNonDeletedByCondition(crd => crd.Id == giftCardRateId)
+            .Select(crd=>crd.Rate)
+            .FirstOrDefaultAsync();
+
+        // Return result
+        return rate;
     }
 
     public async Task<StandardResponse<IEnumerable<GiftCardRateResponseDto>>> 
@@ -238,5 +254,12 @@ public class GiftCardServices : IGiftCardServices
 
         string successMsg = "Giftcard rate update successful";
         return StandardResponse<string>.Success(successMsg);
+    }
+
+    public async Task<bool>
+        ConfirmCardExistsAsync(string? giftCardId)
+    {
+        var cardExists = await _giftCardRepo.ExistsByCondition(giftCrd => giftCrd.Id == giftCardId);
+        return cardExists;
     }
 }

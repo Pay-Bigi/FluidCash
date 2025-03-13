@@ -5,10 +5,10 @@ namespace FluidCash.Helpers.ObjectFormatters.DTOs.Responses;
 public record WalletTradingResponse
 (
     string? tradeId,
-    string? exchangeValue,
+    decimal? exchangeValue,
     string? cardImageUrl,
-    decimal cardAmount,
-    decimal exchangeRate,
+    decimal? cardAmount,
+    decimal? exchangeRate,
     DateTime? tradeDateTime,
     TradeType? tradeType,
     DateTime? validUntil,
