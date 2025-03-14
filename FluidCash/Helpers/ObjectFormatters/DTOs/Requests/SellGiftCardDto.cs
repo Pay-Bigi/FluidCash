@@ -7,5 +7,6 @@ public record SellGiftCardDto
     IFormFile? cardImage,
     decimal? cardAmount,
     string? giftCardId,
+    string? giftCardRateId,
     string? walletId
 );

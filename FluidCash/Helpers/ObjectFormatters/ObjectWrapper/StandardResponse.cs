@@ -39,7 +39,7 @@ public class StandardResponse<T>
     /// <param name="data"></param>
     /// <param name="statusCode"></param>
     /// <returns></returns>
-    public static StandardResponse<T> Success(T data, int statusCode = 200, string? successMessage = "Success")
+    public static StandardResponse<T> Success(T? data, int statusCode = 200, string? successMessage = "Success")
     {
         return new StandardResponse<T> { Succeeded = true, Message = successMessage, Data = data, StatusCode = statusCode };
     }

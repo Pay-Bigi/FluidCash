@@ -13,7 +13,7 @@ public record WalletTradingResponse
     TradeType? tradeType,
     DateTime? validUntil,
     string? otherDetails,
-    string? giftCardId,
+    GiftCardResponseDto? giftCardDetails,
     string? walletId
     //Consider adding card and wallet details
 );

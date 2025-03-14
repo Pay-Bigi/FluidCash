@@ -9,7 +9,7 @@ public interface ITradingServices
     Task<StandardResponse<WalletTradingResponse>>
         BuyGiftCardAsync(BuyGiftCardDto buyGiftCardDto, string userId);
 
-    Task<StandardResponse<string>>
+    Task<StandardResponse<WalletTradingResponse>>
         SellGiftCardAsync(SellGiftCardDto sellGiftCardDto, string userId);
 
     Task<StandardResponse<string>>
@@ -19,7 +19,7 @@ public interface ITradingServices
         ApproveGiftCardPurchaseAsync(ApproveGiftCardPurchaseDto approveGiftCardPurchaseDto, string? userId);
 
     Task<StandardResponse<IEnumerable<WalletTradingResponse>>>
-        GetTradingsAsync(GetTradingsDto getTradingsDto, string userId);
+        GetUserTradingsAsync(GetTradingsDto getTradingsDto, string userId);
 
     Task<StandardResponse<IEnumerable<WalletTradingResponse>>>
         GetAllTradingsAsync(GetTradingsDto getTradingsDto);

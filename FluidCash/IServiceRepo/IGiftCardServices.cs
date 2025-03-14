@@ -6,6 +6,9 @@ namespace FluidCash.IServiceRepo;
 
 public interface IGiftCardServices
 {
+    Task<StandardResponse<GiftCardResponseDto>>
+        GetGiftCardByIdAsync(string cardId);
+
     Task<decimal>
         GetGiftCardRateByIdAsync(string giftCardRateId);
 
