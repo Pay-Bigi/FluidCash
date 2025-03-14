@@ -48,7 +48,7 @@ public class AuthServices : IAuthServices
         {
             var imageFile = createAccountDto.dpImage;
             var imageUploadDetails = await _cloudinaryServices.UploadFileToCloudinaryAsync(imageFile);
-            if (imageUploadDetails.Status)
+            if (imageUploadDetails.Succeeded)
             {
                 userAccount.dpUrl = imageUploadDetails.Data.fileUrlPath;
                 userAccount.dpCloudinaryId = imageUploadDetails.Data.filePublicId;

@@ -13,7 +13,10 @@ public interface ITradingServices
         SellGiftCardAsync(SellGiftCardDto sellGiftCardDto, string userId);
 
     Task<StandardResponse<string>>
-        ApproveGiftCardSellAsync(ApproveGiftCardDto approveGiftCardDto, string userId);
+        ApproveGiftCardSellAsync(ApproveGiftCardSellDto approveGiftCardDto, string userId);
+
+    Task<StandardResponse<string>>
+        ApproveGiftCardPurchaseAsync(ApproveGiftCardPurchaseDto approveGiftCardPurchaseDto, string? userId);
 
     Task<StandardResponse<IEnumerable<WalletTradingResponse>>>
         GetTradingsAsync(GetTradingsDto getTradingsDto, string userId);

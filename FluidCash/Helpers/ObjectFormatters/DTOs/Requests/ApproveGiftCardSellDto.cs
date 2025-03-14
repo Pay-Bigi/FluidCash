@@ -1,6 +1,6 @@
 ﻿namespace FluidCash.Helpers.ObjectFormatters.DTOs.Requests;
 
-public record ApproveGiftCardDto
+public record ApproveGiftCardSellDto
 (
     string tradeId,
     bool isApproved

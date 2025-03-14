@@ -3,6 +3,7 @@ using FluidCash.Helpers.Enums;
 using FluidCash.Helpers.ObjectFormatters.DTOs.Requests;
 using FluidCash.Helpers.ObjectFormatters.DTOs.Responses;
 using FluidCash.Helpers.ObjectFormatters.ObjectWrapper;
+using FluidCash.IExternalServicesRepo;
 using FluidCash.IServiceRepo;
 using FluidCash.Models;
 
@@ -14,19 +15,22 @@ public sealed class TradingServices : ITradingServices
     private readonly IBaseRepo<Wallet> _walletRepo;
     private readonly IBaseRepo<WalletTransaction> _transactionRepo;
     private readonly IGiftCardServices _giftCardServices;
+    private readonly ICloudinaryServices _cloudinaryServices;
 
     public TradingServices(IBaseRepo<WalletTrading> tradingRepo, IBaseRepo<Wallet> walletRepo,
-        IBaseRepo<WalletTransaction> transactionRepo, IGiftCardServices giftCardServices)
+        IBaseRepo<WalletTransaction> transactionRepo, IGiftCardServices giftCardServices, 
+        ICloudinaryServices cloudinaryServices)
     {
         _tradingRepo = tradingRepo;
         _walletRepo = walletRepo;
         _transactionRepo = transactionRepo;
         _giftCardServices = giftCardServices;
+        _cloudinaryServices = cloudinaryServices;
     }
 
     public async Task<StandardResponse<string>> 
         ApproveGiftCardSellAsync
-        (ApproveGiftCardDto approveGiftCardDto, string userId)
+        (ApproveGiftCardSellDto approveGiftCardDto, string userId)
     {
         var trade = _tradingRepo.GetByCondition(x => x.Id == approveGiftCardDto.tradeId).FirstOrDefault();
         if (trade is null)
@@ -43,6 +47,50 @@ public sealed class TradingServices : ITradingServices
         trade.UpdatedAt = DateTime.UtcNow;
         trade.UpdatedBy = userId;
 
+        await _tradingRepo.SaveChangesAsync();
+
+        string? successMessage = "Trade status updated successfully";
+        return StandardResponse<string>.Success(successMessage);
+    }
+
+    public async Task<StandardResponse<string>>
+        ApproveGiftCardPurchaseAsync
+        (ApproveGiftCardPurchaseDto approveGiftCardPurchaseDto, string? userId)
+    {
+        var trade = _tradingRepo.GetByCondition(x => x.Id == approveGiftCardPurchaseDto.tradeId).FirstOrDefault();
+        if (trade is null)
+        {
+            string? errorMessage = "Trade not found";
+            return StandardResponse<string>.Failed(null, errorMessage);
+        }
+        if (trade.Status == TradingStatus.Approved)
+        {
+            string? errorMessage = "Trade already approved";
+            return StandardResponse<string>.Failed(null, errorMessage);
+        }
+        if (approveGiftCardPurchaseDto.isApproved)
+        {
+            trade.Status = TradingStatus.Approved;
+            trade.ValidUntil = approveGiftCardPurchaseDto.validUntil;
+            trade.OtherDetails = approveGiftCardPurchaseDto.otherDetails;
+            if (approveGiftCardPurchaseDto.cardImage is not null)
+            {
+                var imageUploadDetails = await _cloudinaryServices.UploadFileToCloudinaryAsync(approveGiftCardPurchaseDto.cardImage);
+                if(!imageUploadDetails.Succeeded)
+                {
+                    string? errorMsg = "Card image upload failed. Kindly retry";
+                    return StandardResponse<string>.Failed(null, errorMsg);
+                }
+                trade.CardImageUrl = imageUploadDetails.Data.fileUrlPath;
+                trade.CardImageId = imageUploadDetails.Data.filePublicId;
+            }
+        }
+        else
+        {
+            trade.Status = TradingStatus.Declined;
+        }
+        trade.UpdatedAt = DateTime.UtcNow;
+        trade.UpdatedBy = userId;
         await _tradingRepo.SaveChangesAsync();
 
         string? successMessage = "Trade status updated successfully";
@@ -119,6 +167,8 @@ public sealed class TradingServices : ITradingServices
             return StandardResponse<string>.Failed(null, errorMessage);
         }
         _tradingRepo.SoftDelete(tradeToDelete);
+        tradeToDelete.UpdatedBy = userId;
+        tradeToDelete.UpdatedAt = DateTime.UtcNow;
         await _tradingRepo.SaveChangesAsync();
 
         string? successMessage = "Trade deleted successfully";
