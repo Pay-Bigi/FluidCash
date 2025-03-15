@@ -4,6 +4,7 @@ namespace FluidCash.Models;
 
 public class WalletTransaction
 {
+    public bool? IsSuccessful { get; set; }
     public TransactionType? Type { get; set; }
     public string? TransactionReference { get; set; }
     public decimal? Amount { get; set; }

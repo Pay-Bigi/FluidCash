@@ -49,6 +49,8 @@ public sealed class TradingServices : ITradingServices
 
         //If Approved, process payment to wallet account
 
+        //Update Transaction Status
+
         trade.UpdatedAt = DateTime.UtcNow;
         trade.UpdatedBy = userId;
 
@@ -76,6 +78,8 @@ public sealed class TradingServices : ITradingServices
         }
         if (approveGiftCardPurchaseDto.isApproved)
         {
+            //Update Transaction Status 
+
             trade.Status = TradingStatus.Approved;
             trade.ValidUntil = approveGiftCardPurchaseDto.validUntil;
             trade.OtherDetails = approveGiftCardPurchaseDto.otherDetails;
@@ -122,7 +126,9 @@ public sealed class TradingServices : ITradingServices
                     string? errorMsg = "Invalid wallet account";
                     return StandardResponse<WalletTradingResponse>.Failed(null, errorMsg);
                 }
+
                 //Process Payment via wallet or paystack
+
                 var exchangeRate = cardToBuyResponse.Data.GiftCardRates
                     .FirstOrDefault(x=>x.giftCardRateId == buyGiftCardDto.giftCardRateId)?.rate;
                 var trade = new WalletTrading
@@ -173,7 +179,8 @@ public sealed class TradingServices : ITradingServices
         DeleteTradeAync
         (string tradeId, string userId)
     {
-        var tradeToDelete = _tradingRepo.GetByCondition(x => x.Id == tradeId).FirstOrDefault();
+        var tradeToDelete = _tradingRepo.GetNonDeletedByCondition(x => x.Id == tradeId && x.CreatedBy == userId)
+            .FirstOrDefault();
         if (tradeToDelete is null)
         {
             string? errorMessage = "Trade not found";
@@ -397,7 +404,7 @@ public sealed class TradingServices : ITradingServices
                 {
                     Amount = sellGiftCardDto.cardAmount,
                     TransactionReference = trade.Id,
-                    Type = TransactionType.GiftCardPurchase,
+                    Type = TransactionType.GiftCardSale,
                     WalletId = sellGiftCardDto.walletId,
                     TradingId = trade.Id
                 };
