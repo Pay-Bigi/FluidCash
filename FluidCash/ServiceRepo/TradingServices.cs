@@ -8,6 +8,7 @@ using FluidCash.IServiceRepo;
 using FluidCash.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
+using System.Text.Json;
 
 namespace FluidCash.ServiceRepo;
 
@@ -18,16 +19,18 @@ public sealed class TradingServices : ITradingServices
     private readonly IBaseRepo<WalletTransaction> _transactionRepo;
     private readonly IGiftCardServices _giftCardServices;
     private readonly ICloudinaryServices _cloudinaryServices;
+    private readonly IPaystackServices _paystackServices;
 
     public TradingServices(IBaseRepo<WalletTrading> tradingRepo, IBaseRepo<Wallet> walletRepo,
         IBaseRepo<WalletTransaction> transactionRepo, IGiftCardServices giftCardServices,
-        ICloudinaryServices cloudinaryServices)
+        ICloudinaryServices cloudinaryServices, IPaystackServices paystackServices)
     {
         _tradingRepo = tradingRepo;
         _walletRepo = walletRepo;
         _transactionRepo = transactionRepo;
         _giftCardServices = giftCardServices;
         _cloudinaryServices = cloudinaryServices;
+        _paystackServices = paystackServices;
     }
     //Correction Included
     public async Task<StandardResponse<string>>
@@ -45,7 +48,15 @@ public sealed class TradingServices : ITradingServices
             string? errorMessage = "Trade already approved";
             return StandardResponse<string>.Failed(null, errorMessage);
         }
-        trade.Status = approveGiftCardDto.isApproved ? TradingStatus.Approved : TradingStatus.Declined;
+        if (approveGiftCardDto.isApproved)
+        {
+            trade.Status = TradingStatus.Approved;
+            //Credit Wallet
+        }
+        else
+        {
+            trade.Status = TradingStatus.Declined;
+        }
 
         //If Approved, process payment to wallet account
 
@@ -127,15 +138,47 @@ public sealed class TradingServices : ITradingServices
                     return StandardResponse<WalletTradingResponse>.Failed(null, errorMsg);
                 }
 
-                //Process Payment via wallet or paystack
-
                 var exchangeRate = cardToBuyResponse.Data.GiftCardRates
-                    .FirstOrDefault(x=>x.giftCardRateId == buyGiftCardDto.giftCardRateId)?.rate;
+                    .FirstOrDefault(x => x.giftCardRateId == buyGiftCardDto.giftCardRateId)?.rate;
+                var exchangeValue = exchangeRate * buyGiftCardDto.amount;
+
+                //Process Payment via wallet or paystack
+                if (buyGiftCardDto.payFromWallet)
+                {
+                    //Debit Wallet where fund is sufficient 
+                }
+                else
+                {
+                    if (buyGiftCardDto.isPaymentMade)
+                    {
+                        var confirmPaymentResponse = _paystackServices.VerifyTransaction(buyGiftCardDto.paystackTransactionRef);
+                        if (!confirmPaymentResponse.Succeeded)
+                        {
+                            string? errorMsg = "Payment verification failed. Kindly retry or contact your service provider";
+                            return StandardResponse<WalletTradingResponse>.Failed(null, errorMsg);
+                        }
+                    }
+                    else
+                    {
+                        string? userMail = string.Empty;//Update to user mail
+                        int exchangeAmount = Convert.ToInt16(exchangeValue);
+                        var transactionInitiationParams = new InitializePaymentParams(userMail, exchangeAmount);
+                        var initiateTransactionResponse = _paystackServices.InitiateTransaction(transactionInitiationParams);
+                        if (initiateTransactionResponse.Succeeded)
+                        {
+                            var dataToReturn = initiateTransactionResponse.Data;
+                            string paymentPayLoad = JsonSerializer.Serialize(dataToReturn);
+                            return StandardResponse<WalletTradingResponse>.Pending(data: null, message: paymentPayLoad);
+                        }
+                        var errorMsg = initiateTransactionResponse.Message;
+                        return StandardResponse<WalletTradingResponse>.Failed(data: null, errorMsg);
+                    }                    
+                }
                 var trade = new WalletTrading
                 {
                     Status = TradingStatus.Pending,
                     Type = TradeType.Buy,
-                    ExchangeValue = exchangeRate * buyGiftCardDto.amount,
+                    ExchangeValue = exchangeValue,
                     CardAmount = buyGiftCardDto.amount,
                     ExchangeRate = exchangeRate,
                     GiftCardId = buyGiftCardDto.giftCardId,
@@ -153,7 +196,6 @@ public sealed class TradingServices : ITradingServices
                 await _transactionRepo.AddAsync(transaction);
                 await _tradingRepo.SaveChangesAsync();
 
-                var exchangeValue = trade.ExchangeValue;
                 var tradeResponse = new WalletTradingResponse
                 (
                     tradeId: trade.Id,
@@ -280,7 +322,7 @@ public sealed class TradingServices : ITradingServices
         GetUserTradingsAsync
         (GetTradingsDto getTradingsDto, string userId)
     {
-        var query = _tradingRepo.GetNonDeletedByCondition(x=>x.CreatedBy == userId);
+        var query = _tradingRepo.GetNonDeletedByCondition(x => x.CreatedBy == userId);
         if (!string.IsNullOrWhiteSpace(getTradingsDto.tradeId))
         {
             var tradeId = getTradingsDto.tradeId.ToLower();

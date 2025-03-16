@@ -7,7 +7,7 @@ namespace FluidCash.IExternalServicesRepo;
 public interface IPaystackServices
 {
     StandardResponse<string>
-        InitializeTransfer
+        InitiateTransfer
         (InitiateTransferParams initiateTransferParams);
 
     StandardResponse<string>

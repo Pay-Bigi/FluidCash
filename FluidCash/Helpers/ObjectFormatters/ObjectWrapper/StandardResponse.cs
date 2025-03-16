@@ -45,6 +45,18 @@ public class StandardResponse<T>
     }
 
     /// <summary>
+    /// Application custom response message, 202 means accepted 
+    /// </summary>
+    /// <param name="message"></param>
+    /// <param name="data"></param>
+    /// <param name="statusCode"></param>
+    /// <returns></returns>
+    public static StandardResponse<T> Pending(T? data, string? message = "pending_process", int statusCode = 202)
+    {
+        return new StandardResponse<T> { Succeeded = true, Message = message, Data = data, StatusCode = statusCode };
+    }
+
+    /// <summary>
     /// Application custom response message, 503 means server error
     /// </summary>
     /// <param name="message"></param>

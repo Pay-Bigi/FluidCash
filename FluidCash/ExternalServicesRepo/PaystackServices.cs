@@ -16,7 +16,7 @@ public sealed class PaystackServices : IPaystackServices
     }
 
     public StandardResponse<string>
-        InitializeTransfer
+        InitiateTransfer
         (InitiateTransferParams initiateTransferParams)
     {
         var recipientCode = CreateTransferRecipient(initiateTransferParams.accountName, initiateTransferParams.accountNumber, initiateTransferParams.bankCode);
@@ -53,7 +53,7 @@ public sealed class PaystackServices : IPaystackServices
             (
                 email: initializePaymentParams.clientMail,
                 amountInKobo: initializePaymentParams.amount,
-                reference: transactionRef, makeReferenceUnique: true);
+                reference: transactionRef, makeReferenceUnique: false);
 
         if (string.IsNullOrWhiteSpace(payStackResponse.Data.AuthorizationUrl))
         {
@@ -65,6 +65,32 @@ public sealed class PaystackServices : IPaystackServices
 
         var initiateTransactionResponse = new InitiateTransactionResponse(transactionAuthUrl, transactionRef);
         return StandardResponse<InitiateTransactionResponse>.Success(data: initiateTransactionResponse);
+    }
+
+    public StandardResponse<VerifyPayStackPayment>
+        VerifyTransaction
+        (string transactionRef)
+    {
+        var payStackVerfication = _payStackServices.Transactions.Verify(transactionRef);
+        if (!payStackVerfication.Status)
+        {
+            return StandardResponse<VerifyPayStackPayment>.Failed(data: null, errorMessage: payStackVerfication.Message);
+        }
+        var payStackData = payStackVerfication.Data;
+        var verifyPayStackPaymentResp = new VerifyPayStackPayment
+             (
+                status: payStackData.Status,
+                authorizationCode: payStackData.Authorization.AuthorizationCode,
+                amount: payStackData.Amount,
+                transactionReference: payStackData.Reference,
+                currency: payStackData.Currency,
+                bank: payStackData.Authorization.Bank,
+                channel: payStackData.Authorization.Channel,
+                cardType: payStackData.Authorization.CardType,
+                paidAt: payStackData.TransactionDate,
+                customerMail: payStackData.Customer.Email
+            );
+        return StandardResponse<VerifyPayStackPayment>.Success(verifyPayStackPaymentResp);
     }
 
     public StandardResponse<IEnumerable<BankListResponse>>
@@ -85,33 +111,6 @@ public sealed class PaystackServices : IPaystackServices
         ));
 
         return StandardResponse<IEnumerable<BankListResponse>>.Success(bankList);
-    }
-
-    public StandardResponse<VerifyPayStackPayment>
-        VerifyTransaction
-        (string transactionRef)
-    {
-        var payStackVerfication = _payStackServices.Transactions.Verify(transactionRef);
-        if (!payStackVerfication.Status)
-        {
-
-            return StandardResponse<VerifyPayStackPayment>.Failed(data: null, errorMessage: payStackVerfication.Message);
-        }
-        var payStackData = payStackVerfication.Data;
-        var verifyPayStackPaymentResp = new VerifyPayStackPayment
-             (
-                status: payStackData.Status,
-                authorizationCode: payStackData.Authorization.AuthorizationCode,
-                amount: payStackData.Amount,
-                transactionReference: payStackData.Reference,
-                currency: payStackData.Currency,
-                bank: payStackData.Authorization.Bank,
-                channel: payStackData.Authorization.Channel,
-                cardType: payStackData.Authorization.CardType,
-                paidAt: payStackData.TransactionDate,
-                customerMail: payStackData.Customer.Email
-            );
-        return StandardResponse<VerifyPayStackPayment>.Success(verifyPayStackPaymentResp);
     }
 
     private StandardResponse<string>
