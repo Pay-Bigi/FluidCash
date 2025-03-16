@@ -1,6 +1,6 @@
 ﻿namespace FluidCash.Helpers.ObjectFormatters.DTOs.Requests;
 
-public record CreateAccountDto
+public record CreateAccountParams
 (
     IFormFile? dpImage,
     string displayName,

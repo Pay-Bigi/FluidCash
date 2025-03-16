@@ -16,22 +16,22 @@ public interface IGiftCardServices
         ConfirmCardExistsAsync(string? giftCardId);
 
     Task<StandardResponse<string>>
-        UpdateGiftCardAsync(UpdateGiftCardDto updateGiftCardDto, string? userId);
+        UpdateGiftCardAsync(UpdateGiftCardParams updateGiftCardDto, string? userId);
 
     Task<StandardResponse<IEnumerable<GiftCardResponseDto>>>
-        GetGiftCardAsync(GetGiftCardDto getGiftCardDto);
+        GetGiftCardAsync(GetGiftCardFilterParams getGiftCardDto);
 
     Task<StandardResponse<string>>
         DeleteGiftCardAsync(string giftCardId, string? userId);
 
     Task<StandardResponse<string>>
-        CreateGiftCardAndRateAsync(CreateGiftCardAndRateDto createGiftCardAndRateDto, string? userId);
+        CreateGiftCardAndRateAsync(CreateGiftCardAndRateParams createGiftCardAndRateDto, string? userId);
 
     Task<StandardResponse<string>>
-        UpdateGiftCardRateAsync(UpdateGiftCardRateDto updateGiftCardDto, string? userId);
+        UpdateGiftCardRateAsync(UpdateGiftCardRateParams updateGiftCardDto, string? userId);
 
     Task<StandardResponse<IEnumerable<GiftCardRateResponseDto>>>
-        GetGiftCardRateAsync(GetGiftCardRateDto getGiftCardDto);
+        GetGiftCardRateAsync(GetGiftCardRateFilterParams getGiftCardDto);
 
     Task<StandardResponse<string>>
         DeleteGiftCardRateAsync(string giftCardRateId, string? userId);

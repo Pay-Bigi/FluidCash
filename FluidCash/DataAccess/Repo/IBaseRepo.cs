@@ -4,7 +4,7 @@ namespace FluidCash.DataAccess.Repo;
 
 public interface IBaseRepo<T> where T : class
 {
-    Task<bool> ExistsByCondition(Expression<Func<T, bool>> condition);
+    Task<bool> ExistsByConditionAsync(Expression<Func<T, bool>> condition);
     IQueryable<T> GetAll();
     IQueryable<T> GetByCondition (Expression<Func<T, bool>> conditionExpression);
     IQueryable<T> GetAllNonDeleted();

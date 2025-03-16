@@ -22,7 +22,7 @@ public class GiftCardServices : IGiftCardServices
 
     public async Task<StandardResponse<string>> 
         CreateGiftCardAndRateAsync
-        (CreateGiftCardAndRateDto createGiftCardAndRateDto, string? userId)
+        (CreateGiftCardAndRateParams createGiftCardAndRateDto, string? userId)
     {
         var giftCard = new GiftCard
         {
@@ -81,7 +81,7 @@ public class GiftCardServices : IGiftCardServices
 
     public async Task<StandardResponse<IEnumerable<GiftCardResponseDto>>> 
         GetGiftCardAsync
-        (GetGiftCardDto getGiftCardDto)
+        (GetGiftCardFilterParams getGiftCardDto)
     {
         // Base query: Get non-deleted gift cards by ID
         var query = _giftCardRepo.GetAllNonDeleted();
@@ -171,7 +171,7 @@ public class GiftCardServices : IGiftCardServices
 
     public async Task<StandardResponse<IEnumerable<GiftCardRateResponseDto>>> 
         GetGiftCardRateAsync
-        (GetGiftCardRateDto getGiftCardRateDto)
+        (GetGiftCardRateFilterParams getGiftCardRateDto)
     {// Base query: Get non-deleted gift cards by ID
         string? cardRateId = getGiftCardRateDto.giftCardRateId;
         var query = _giftCardRateRepo.GetNonDeletedByCondition(crd => 
@@ -223,7 +223,7 @@ public class GiftCardServices : IGiftCardServices
 
     public async Task<StandardResponse<string>> 
         UpdateGiftCardAsync
-        (UpdateGiftCardDto updateGiftCardDto, string? userId)
+        (UpdateGiftCardParams updateGiftCardDto, string? userId)
     {
         // Base query: Get non-deleted gift cards by ID
         var query = _giftCardRepo.GetNonDeletedByCondition(crd => crd.Id == updateGiftCardDto.giftCardId).FirstOrDefault();
@@ -254,7 +254,7 @@ public class GiftCardServices : IGiftCardServices
 
     public async Task<StandardResponse<string>> 
         UpdateGiftCardRateAsync
-        (UpdateGiftCardRateDto updateGiftCardRateDto, string? userId)
+        (UpdateGiftCardRateParams updateGiftCardRateDto, string? userId)
     {
         // Base query: Get non-deleted gift card rate by ID
         var query = _giftCardRateRepo.GetNonDeletedByCondition(crd => crd.Id == updateGiftCardRateDto.giftCardRateId).FirstOrDefault();
@@ -285,7 +285,7 @@ public class GiftCardServices : IGiftCardServices
     public async Task<bool>
         ConfirmCardExistsAsync(string? giftCardId)
     {
-        var cardExists = await _giftCardRepo.ExistsByCondition(giftCrd => giftCrd.Id == giftCardId);
+        var cardExists = await _giftCardRepo.ExistsByConditionAsync(giftCrd => giftCrd.Id == giftCardId);
         return cardExists;
     }
 }

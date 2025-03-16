@@ -47,7 +47,7 @@ public sealed class BaseRepo<T> : IBaseRepo<T> where T : class, IBaseEntity
     }
 
     public async Task<bool>
-        ExistsByCondition
+        ExistsByConditionAsync
         (Expression<Func<T, bool>> condition)
     {
         return await _dbSet.Where(t => !t.IsDeleted.Value)

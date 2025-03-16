@@ -1,6 +1,6 @@
 ﻿namespace FluidCash.Helpers.ObjectFormatters.DTOs.Requests;
 
-public class PayStackServiceRequests
+public class PayStackServiceRequestParams
 {
 }
 

@@ -1,10 +1,9 @@
 ﻿namespace FluidCash.Helpers.ObjectFormatters.DTOs.Requests;
 
-public record GetGiftCardRateDto
+public record UpdateGiftCardRateParams
 (
+    string? giftCardRateId,
     string? countryCode,
     string? currency,
-    decimal? rate,
-    string? giftCardId,
-    string? giftCardRateId
+    decimal? rate
 );

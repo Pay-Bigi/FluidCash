@@ -1,4 +1,4 @@
 ﻿namespace FluidCash.Helpers.ObjectFormatters.DTOs.Requests;
 
-public record LoginDto
+public record LoginParams
 (string userEmail, string password);

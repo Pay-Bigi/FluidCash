@@ -1,6 +1,6 @@
 ﻿namespace FluidCash.Helpers.ObjectFormatters.DTOs.Requests;
 
-public record CreateUserAccountDto
+public record CreateUserAccountParams
 {
     public string? dpUrl {  get; set; } 
     public string? dpCloudinaryId { get; set; }

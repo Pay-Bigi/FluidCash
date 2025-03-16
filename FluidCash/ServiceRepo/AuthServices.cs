@@ -20,7 +20,7 @@ public class AuthServices : IAuthServices
     private readonly IEmailSender _emailSender;
 
     public AuthServices(IAccountMgtServices accountMgtServices, ICloudinaryServices cloudinaryServices,
-        UserManager<AppUser> userManager, ITokenService tokenService, IRedisCacheService redisCacheService, 
+        UserManager<AppUser> userManager, ITokenService tokenService, IRedisCacheService redisCacheService,
         IEmailSender emailSender)
     {
         _accountMgtServices = accountMgtServices;
@@ -32,14 +32,14 @@ public class AuthServices : IAuthServices
     }
 
     public async Task<StandardResponse<string>>
-        CreateAccountAsync(CreateAccountDto createAccountDto)
+        CreateAccountAsync(CreateAccountParams createAccountDto)
     {
         var appUser = new AppUser
         {
             Email = createAccountDto.userEmail,
             UserName = createAccountDto.userEmail
         };
-        var userAccount = new CreateUserAccountDto
+        var userAccount = new CreateUserAccountParams
         {
             displayName = createAccountDto.displayName,
             appUserId = appUser.Id
@@ -54,15 +54,20 @@ public class AuthServices : IAuthServices
                 userAccount.dpCloudinaryId = imageUploadDetails.Data.filePublicId;
             }
         }
-         await _userManager.CreateAsync(appUser, createAccountDto.password);
-         await _accountMgtServices.CreateUserAccountAsync(userAccount);
+        var accCreationSuccessful = await _accountMgtServices.CreateUserAccountAsync(userAccount);
+        if (!accCreationSuccessful)
+        {
+            string errorMsg = "Account creation failed";
+            return StandardResponse<string>.Failed(data: null, errorMessage: errorMsg);
+        }
+        await _userManager.CreateAsync(appUser, createAccountDto.password);
 
         string? successMsg = "Account successfully created. Proceed to login";
-        return  StandardResponse<string>.Success(successMsg, statusCode: 201);
+        return StandardResponse<string>.Success(successMsg, statusCode: 201);
     }
 
     public async Task<StandardResponse<string>>
-        LoginAsync(LoginDto loginDto)
+        LoginAsync(LoginParams loginDto)
     {
         var user = await _userManager.FindByEmailAsync(loginDto.userEmail);
         if (user is not null)

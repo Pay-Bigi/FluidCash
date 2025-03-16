@@ -2,7 +2,7 @@
 
 public class Wallet:BaseEntity
 {
-    public string? currency { get; set; }
+    public string? Currency { get; set; }
     public decimal Balance { get; set; }
     public string? AccountId { get; set; }
     public Account? Account { get; set; }

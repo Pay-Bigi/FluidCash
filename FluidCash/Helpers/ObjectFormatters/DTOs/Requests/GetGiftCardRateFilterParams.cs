@@ -1,10 +1,10 @@
 ﻿namespace FluidCash.Helpers.ObjectFormatters.DTOs.Requests;
 
-public record GetGiftCardDto
+public record GetGiftCardRateFilterParams
 (
-    string? category,
-    string? subCategory,    
+    string? countryCode,
+    string? currency,
+    decimal? rate,
     string? giftCardId,
     string? giftCardRateId
 );
-    

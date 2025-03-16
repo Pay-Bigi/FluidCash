@@ -1,6 +1,6 @@
 ﻿namespace FluidCash.Helpers.ObjectFormatters.DTOs.Requests;
 
-public record UpdateGiftCardDto
+public record UpdateGiftCardParams
 (
     string? giftCardId,
     string? category,

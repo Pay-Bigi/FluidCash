@@ -35,7 +35,7 @@ public sealed class TradingServices : ITradingServices
     //Correction Included
     public async Task<StandardResponse<string>>
         ApproveGiftCardSellAsync
-        (ApproveGiftCardSellDto approveGiftCardDto, string userId)
+        (ApproveGiftCardSellParams approveGiftCardDto, string userId)
     {
         var trade = _tradingRepo.GetByCondition(x => x.Id == approveGiftCardDto.tradeId).FirstOrDefault();
         if (trade is null)
@@ -74,7 +74,7 @@ public sealed class TradingServices : ITradingServices
     //Correction Included
     public async Task<StandardResponse<string>>
         ApproveGiftCardPurchaseAsync
-        (ApproveGiftCardPurchaseDto approveGiftCardPurchaseDto, string? userId)
+        (ApproveGiftCardPurchaseParams approveGiftCardPurchaseDto, string? userId)
     {
         var trade = _tradingRepo.GetByCondition(x => x.Id == approveGiftCardPurchaseDto.tradeId).FirstOrDefault();
         if (trade is null)
@@ -122,7 +122,7 @@ public sealed class TradingServices : ITradingServices
     //Correction Included
     public async Task<StandardResponse<WalletTradingResponse>>
         BuyGiftCardAsync
-        (BuyGiftCardDto buyGiftCardDto, string userId)
+        (BuyGiftCardParams buyGiftCardDto, string userId)
     {
         var cardToBuyResponse = await _giftCardServices.GetGiftCardByIdAsync(buyGiftCardDto.giftCardId);
 
@@ -130,7 +130,7 @@ public sealed class TradingServices : ITradingServices
         {
             if (cardToBuyResponse.Data is not null)
             {
-                var walletExists = await _walletRepo.ExistsByCondition(x => x.Id == buyGiftCardDto.walletId);
+                var walletExists = await _walletRepo.ExistsByConditionAsync(x => x.Id == buyGiftCardDto.walletId);
 
                 if (!walletExists)
                 {
@@ -239,7 +239,7 @@ public sealed class TradingServices : ITradingServices
 
     public async Task<StandardResponse<IEnumerable<WalletTradingResponse>>>
         GetAllTradingsAsync
-        (GetTradingsDto getTradingsDto)
+        (GetTradingsFilterParams getTradingsDto)
     {
         var query = _tradingRepo.GetAll();
         if (!string.IsNullOrWhiteSpace(getTradingsDto.tradeId))
@@ -320,7 +320,7 @@ public sealed class TradingServices : ITradingServices
 
     public async Task<StandardResponse<IEnumerable<WalletTradingResponse>>>
         GetUserTradingsAsync
-        (GetTradingsDto getTradingsDto, string userId)
+        (GetTradingsFilterParams getTradingsDto, string userId)
     {
         var query = _tradingRepo.GetNonDeletedByCondition(x => x.CreatedBy == userId);
         if (!string.IsNullOrWhiteSpace(getTradingsDto.tradeId))
@@ -401,7 +401,7 @@ public sealed class TradingServices : ITradingServices
 
     public async Task<StandardResponse<WalletTradingResponse>>
         SellGiftCardAsync
-        (SellGiftCardDto sellGiftCardDto, string userId)
+        (SellGiftCardParams sellGiftCardDto, string userId)
     {
         var cardToSellResponse = await _giftCardServices.GetGiftCardByIdAsync(sellGiftCardDto.giftCardId);
 
@@ -409,7 +409,7 @@ public sealed class TradingServices : ITradingServices
         {
             if (cardToSellResponse.Data is not null)
             {
-                var walletExists = await _walletRepo.ExistsByCondition(x => x.Id == sellGiftCardDto.walletId);
+                var walletExists = await _walletRepo.ExistsByConditionAsync(x => x.Id == sellGiftCardDto.walletId);
 
                 if (!walletExists)
                 {

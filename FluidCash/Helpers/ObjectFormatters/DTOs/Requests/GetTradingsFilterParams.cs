@@ -2,7 +2,7 @@
 
 namespace FluidCash.Helpers.ObjectFormatters.DTOs.Requests;
 
-public record GetTradingsDto
+public record GetTradingsFilterParams
 (
     string? tradeId,
     decimal? exchangeValue,

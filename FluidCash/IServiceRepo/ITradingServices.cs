@@ -7,22 +7,22 @@ namespace FluidCash.IServiceRepo;
 public interface ITradingServices
 {
     Task<StandardResponse<WalletTradingResponse>>
-        BuyGiftCardAsync(BuyGiftCardDto buyGiftCardDto, string userId);
+        BuyGiftCardAsync(BuyGiftCardParams buyGiftCardDto, string userId);
 
     Task<StandardResponse<WalletTradingResponse>>
-        SellGiftCardAsync(SellGiftCardDto sellGiftCardDto, string userId);
+        SellGiftCardAsync(SellGiftCardParams sellGiftCardDto, string userId);
 
     Task<StandardResponse<string>>
-        ApproveGiftCardSellAsync(ApproveGiftCardSellDto approveGiftCardDto, string userId);
+        ApproveGiftCardSellAsync(ApproveGiftCardSellParams approveGiftCardDto, string userId);
 
     Task<StandardResponse<string>>
-        ApproveGiftCardPurchaseAsync(ApproveGiftCardPurchaseDto approveGiftCardPurchaseDto, string? userId);
+        ApproveGiftCardPurchaseAsync(ApproveGiftCardPurchaseParams approveGiftCardPurchaseDto, string? userId);
 
     Task<StandardResponse<IEnumerable<WalletTradingResponse>>>
-        GetUserTradingsAsync(GetTradingsDto getTradingsDto, string userId);
+        GetUserTradingsAsync(GetTradingsFilterParams getTradingsDto, string userId);
 
     Task<StandardResponse<IEnumerable<WalletTradingResponse>>>
-        GetAllTradingsAsync(GetTradingsDto getTradingsDto);
+        GetAllTradingsAsync(GetTradingsFilterParams getTradingsDto);
 
     Task<StandardResponse<string>>
         DeleteTradeAync(string tradeId, string userId);

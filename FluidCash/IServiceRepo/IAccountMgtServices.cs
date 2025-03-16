@@ -4,5 +4,5 @@ namespace FluidCash.IServiceRepo;
 
 public interface IAccountMgtServices
 {
-    Task<bool> CreateUserAccountAsync(CreateUserAccountDto createUserAccountDto);
+    Task<bool> CreateUserAccountAsync(CreateUserAccountParams createUserAccountDto);
 }

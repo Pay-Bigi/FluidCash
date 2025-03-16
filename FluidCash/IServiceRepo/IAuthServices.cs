@@ -6,10 +6,10 @@ namespace FluidCash.IServiceRepo;
 public interface IAuthServices
 {
     Task<StandardResponse<string>>
-        CreateAccountAsync(CreateAccountDto createAccountDto);
+        CreateAccountAsync(CreateAccountParams createAccountDto);
 
     Task<StandardResponse<string>>
-        LoginAsync(LoginDto loginDto);
+        LoginAsync(LoginParams loginDto);
 
     Task<StandardResponse<string>>
     ResetPasswordAsync(string userEmail);
