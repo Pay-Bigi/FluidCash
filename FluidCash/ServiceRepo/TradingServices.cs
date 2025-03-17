@@ -15,18 +15,18 @@ namespace FluidCash.ServiceRepo;
 public sealed class TradingServices : ITradingServices
 {
     private readonly IBaseRepo<WalletTrading> _tradingRepo;
-    private readonly IBaseRepo<Wallet> _walletRepo;
+    private readonly IWalletServices _walletServices;
     private readonly IBaseRepo<WalletTransaction> _transactionRepo;
     private readonly IGiftCardServices _giftCardServices;
     private readonly ICloudinaryServices _cloudinaryServices;
     private readonly IPaystackServices _paystackServices;
 
-    public TradingServices(IBaseRepo<WalletTrading> tradingRepo, IBaseRepo<Wallet> walletRepo,
+    public TradingServices(IBaseRepo<WalletTrading> tradingRepo, IWalletServices walletServices,
         IBaseRepo<WalletTransaction> transactionRepo, IGiftCardServices giftCardServices,
         ICloudinaryServices cloudinaryServices, IPaystackServices paystackServices)
     {
         _tradingRepo = tradingRepo;
-        _walletRepo = walletRepo;
+        _walletServices = walletServices;
         _transactionRepo = transactionRepo;
         _giftCardServices = giftCardServices;
         _cloudinaryServices = cloudinaryServices;
@@ -130,7 +130,7 @@ public sealed class TradingServices : ITradingServices
         {
             if (cardToBuyResponse.Data is not null)
             {
-                var walletExists = await _walletRepo.ExistsByConditionAsync(x => x.Id == buyGiftCardDto.walletId);
+                var walletExists = await _walletServices.ConfirmWalletExistsAsync(buyGiftCardDto.walletId);
 
                 if (!walletExists)
                 {
@@ -142,10 +142,15 @@ public sealed class TradingServices : ITradingServices
                     .FirstOrDefault(x => x.giftCardRateId == buyGiftCardDto.giftCardRateId)?.rate;
                 var exchangeValue = exchangeRate * buyGiftCardDto.amount;
 
-                //Process Payment via wallet or paystack
                 if (buyGiftCardDto.payFromWallet)
                 {
-                    //Debit Wallet where fund is sufficient 
+                    var debitPayload = new CreditAndDebitWalletParams(buyGiftCardDto.walletId, buyGiftCardDto.amount);
+                    var debitWalletSucceded = await _walletServices.DebitWalletAsync(debitPayload, userId);
+                    if (!debitWalletSucceded)
+                    {
+                        string? errorMsg = "Insufficient Balance";
+                        return StandardResponse<WalletTradingResponse>.Failed(data: null, errorMsg);
+                    }
                 }
                 else
                 {
@@ -308,7 +313,7 @@ public sealed class TradingServices : ITradingServices
                         rate.Currency,
                         rate.Rate,
                         trade.GiftCardId,
-                        giftCardRates.FirstOrDefault()?.Id
+                        rate.Id
                     )).ToList()
                 ),
                 walletId: trade.WalletId
@@ -389,7 +394,7 @@ public sealed class TradingServices : ITradingServices
                         rate.Currency,
                         rate.Rate,
                         trade.GiftCardId,
-                        giftCardRates.FirstOrDefault()?.Id
+                        rate.Id
                     )).ToList()
                 ),
                 walletId: trade.WalletId

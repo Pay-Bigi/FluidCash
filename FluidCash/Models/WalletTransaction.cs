@@ -2,7 +2,7 @@
 
 namespace FluidCash.Models;
 
-public class WalletTransaction
+public class WalletTransaction:BaseEntity
 {
     public bool? IsSuccessful { get; set; }
     public TransactionType? Type { get; set; }

@@ -5,7 +5,7 @@ namespace FluidCash.Helpers.ObjectFormatters.DTOs.Responses;
 public record WalletTransactionResponse
 (
     string? trnsactionId,
-    TransactionType transactionType,
+    TransactionType? transactionType,
     string? transactionReference,
     decimal? amount,
     string? otherDetails,
