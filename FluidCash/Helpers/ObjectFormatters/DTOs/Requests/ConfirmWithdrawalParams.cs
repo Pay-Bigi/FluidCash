@@ -1,7 +1,8 @@
 ﻿namespace FluidCash.Helpers.ObjectFormatters.DTOs.Requests;
 
-public record CreditAndDebitWalletParams
+public record ConfirmWithdrawalParams
 (
-    string? walletId,
+    string? accountId,
+    string? otp,
     decimal? amount
 );

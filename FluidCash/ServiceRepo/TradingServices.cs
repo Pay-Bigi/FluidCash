@@ -7,7 +7,6 @@ using FluidCash.IExternalServicesRepo;
 using FluidCash.IServiceRepo;
 using FluidCash.Models;
 using Microsoft.EntityFrameworkCore;
-using System.Diagnostics;
 using System.Text.Json;
 
 namespace FluidCash.ServiceRepo;
@@ -32,6 +31,7 @@ public sealed class TradingServices : ITradingServices
         _cloudinaryServices = cloudinaryServices;
         _paystackServices = paystackServices;
     }
+
     //Correction Included
     public async Task<StandardResponse<string>>
         ApproveGiftCardSellAsync
@@ -51,14 +51,18 @@ public sealed class TradingServices : ITradingServices
         if (approveGiftCardDto.isApproved)
         {
             trade.Status = TradingStatus.Approved;
-            //Credit Wallet
+            var creditPayload = new CreditAndDebitWalletParams(trade.WalletId, trade.ExchangeValue);
+            var creditWltSuccess = await _walletServices.CreditWalletAsync(creditPayload, userId);
+            if (!creditWltSuccess)
+            {
+                string? errorMsg = "Credit wallet failed. Kindly retry";
+                return StandardResponse<string>.Failed(null, errorMsg);
+            }
         }
         else
         {
             trade.Status = TradingStatus.Declined;
         }
-
-        //If Approved, process payment to wallet account
 
         //Update Transaction Status
 
@@ -109,7 +113,13 @@ public sealed class TradingServices : ITradingServices
         else
         {
             trade.Status = TradingStatus.Declined;
-            //Process refund to wallet Account
+            var creditPayload = new CreditAndDebitWalletParams(trade.WalletId, trade.CardAmount);
+            var creditWltSuccess = await _walletServices.CreditWalletAsync(creditPayload, userId);
+            if (!creditWltSuccess)
+            {
+                string? errorMsg = "Decline failed due to refund error. Kindly retry";
+                return StandardResponse<string>.Failed(null, errorMsg);
+            }
         }
         trade.UpdatedAt = DateTime.UtcNow;
         trade.UpdatedBy = userId;
@@ -165,7 +175,9 @@ public sealed class TradingServices : ITradingServices
                     }
                     else
                     {
-                        string? userMail = string.Empty;//Update to user mail
+                        //Update to user mail
+
+                        string? userMail = string.Empty;
                         int exchangeAmount = Convert.ToInt16(exchangeValue);
                         var transactionInitiationParams = new InitializePaymentParams(userMail, exchangeAmount);
                         var initiateTransactionResponse = _paystackServices.InitiateTransaction(transactionInitiationParams);

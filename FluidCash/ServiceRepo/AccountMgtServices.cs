@@ -1,5 +1,7 @@
 ﻿using FluidCash.DataAccess.Repo;
 using FluidCash.Helpers.ObjectFormatters.DTOs.Requests;
+using FluidCash.Helpers.ObjectFormatters.DTOs.Responses;
+using FluidCash.Helpers.ObjectFormatters.ObjectWrapper;
 using FluidCash.IServiceRepo;
 using FluidCash.Models;
 
@@ -15,6 +17,7 @@ public sealed class AccountMgtServices : IAccountMgtServices
         _accountRepo = accountRepo;
         _walletServices = walletServices;
     }
+
 
     public async Task<bool>
         CreateUserAccountAsync
@@ -48,5 +51,60 @@ public sealed class AccountMgtServices : IAccountMgtServices
         {
             return false;
         }
+    }
+
+    public Task<StandardResponse<string>> 
+        DeleteDpAsync
+        (string accountId, string userId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<StandardResponse<AccountResponseDto>> 
+        GetUserAccountsAsync
+        (string userId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<StandardResponse<IEnumerable<AccountResponseDto>>>
+        GetAllAccountsAsync(AccountsFilterParams accountsFilterParams)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<StandardResponse<DashboardResponse>> 
+        GetUserDashboardAsync
+        (string userId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<StandardResponse<string>> 
+        InitiateWithdrawalAsync
+        (InitiateWithdrawalParams withdrawalParams, string userId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<StandardResponse<string>> 
+        ConfirmWithdrawalAsync
+        (ConfirmWithdrawalParams confirmWithdrawalParams, string? userId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<StandardResponse<string>> 
+        UpdateBankDetails
+        (BankDetailsDto bankDetailsDto, string userId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<StandardResponse<string>> 
+        UploadDpAsync
+        (UploadDpParams uploadDpParams, string? userId)
+    {
+        throw new NotImplementedException();
     }
 }
