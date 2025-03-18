@@ -57,6 +57,8 @@ public class GiftCardServices : IGiftCardServices
         if(giftCard is not null)
        { 
             _giftCardRepo.SoftDelete(giftCard);
+            giftCard.UpdatedAt = DateTime.UtcNow;
+            giftCard.UpdatedBy = userId;
             await _giftCardRepo.SaveChangesAsync();
         }
         string? successMsg = "Gift Card deleted successfully";
@@ -73,6 +75,8 @@ public class GiftCardServices : IGiftCardServices
         if (giftCardRate is not null)
         {
             _giftCardRateRepo.SoftDelete(giftCardRate);
+            giftCardRate.UpdatedAt = DateTime.UtcNow;
+            giftCardRate.UpdatedBy = userId;
             await _giftCardRateRepo.SaveChangesAsync();
         }
         string? successMsg = "Gift card rate deleted successfully";
@@ -83,7 +87,6 @@ public class GiftCardServices : IGiftCardServices
         GetGiftCardAsync
         (GetGiftCardFilterParams getGiftCardDto)
     {
-        // Base query: Get non-deleted gift cards by ID
         var query = _giftCardRepo.GetAllNonDeleted();
 
         // Apply filters if provided
