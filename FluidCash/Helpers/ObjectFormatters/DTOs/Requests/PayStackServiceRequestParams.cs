@@ -6,13 +6,10 @@ public class PayStackServiceRequestParams
 
 public record InitiateTransferParams
 (
-    string? walletAddress,
-    string? transactionPassword,
     int amount,
     string? accountName,
     string? accountNumber,
-    string? bankCode,
-    string? description
+    string? bankCode
 );
 
 public record ResolveAccountParams

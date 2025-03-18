@@ -6,6 +6,10 @@ namespace FluidCash.IServiceRepo;
 
 public interface IAccountMgtServices
 {
+    Task<StandardResponse<string>>
+       CreateBankDetails
+       (BankDetailsDto bankDetailsDto, string userId);
+
     Task<StandardResponse<IEnumerable<AccountResponseDto>>>
         GetAllAccountsAsync(AccountsFilterParams accountsFilterParams);
 
@@ -16,7 +20,7 @@ public interface IAccountMgtServices
         GetUserDashboardAsync(string userId);
 
     Task<StandardResponse<AccountResponseDto>> 
-        GetUserAccountsAsync (string userId);
+        GetUserAccountsAsync (string accountId);
 
     Task<StandardResponse<string>>
         UploadDpAsync(UploadDpParams uploadDpParams, string? userId);

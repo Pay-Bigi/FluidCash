@@ -135,7 +135,7 @@ public class GiftCardServices : IGiftCardServices
             : StandardResponse<IEnumerable<GiftCardResponseDto>>.Failed(data: null, errorMessage: "No gift cards found.");
     }
 
-    public async Task<StandardResponse<GiftCardResponseDto>>
+    public async Task<GiftCardResponseDto?>
         GetGiftCardByIdAsync
         (string cardId)
     {
@@ -147,18 +147,18 @@ public class GiftCardServices : IGiftCardServices
             .Select(x => new GiftCardResponseDto(
                 x.Category,
                 x.SubCategory,
-                x.GiftCardRates.Select(y => new GiftCardRateResponseDto(
+                x.GiftCardRates.Any() ? x.GiftCardRates.Select(y => new GiftCardRateResponseDto(
                     y.CountryCode,
                     y.Currency,
                     y.Rate,
                     cardId,
                     y.Id
-                ))
+                )):null
             ))
             .FirstOrDefaultAsync();
 
         // Return result
-        return StandardResponse<GiftCardResponseDto>.Success(giftCard);
+        return giftCard;
     }
 
     public async Task<decimal>

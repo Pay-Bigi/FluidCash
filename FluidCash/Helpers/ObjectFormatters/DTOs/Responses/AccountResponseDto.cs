@@ -12,6 +12,6 @@ public record AccountResponseDto
 public record BankDetailsResponse
 (
     string? bankCode,
-    string? AccountName,
-    string? AccountNumber
+    string? accountName,
+    string? accountNumber
 );

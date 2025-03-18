@@ -27,7 +27,7 @@ public class StandardResponse<T>
     /// <param name="errorMessage"></param>
     /// <param name="statusCode"></param>
     /// <returns></returns>
-    public static StandardResponse<T> Failed(T? data, string errorMessage = "Request failed", int statusCode = 404)
+    public static StandardResponse<T> Failed(T? data, string errorMessage = "Request failed", int statusCode = 400)
     {
         return new StandardResponse<T> { Succeeded = false, Message = errorMessage, StatusCode = statusCode, Data = data };
     }

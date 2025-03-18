@@ -9,5 +9,5 @@ public record DashboardResponse
     string? walletId,
     string? currency,
     decimal? balance,
-    WalletTransactionResponse? todaysTransactions
+    IEnumerable<WalletTransactionResponse>? todaysTransactions
 );

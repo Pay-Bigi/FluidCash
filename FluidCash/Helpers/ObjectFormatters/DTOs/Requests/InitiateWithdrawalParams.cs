@@ -4,5 +4,5 @@ public record InitiateWithdrawalParams
 (
     string? accountId,
     string? transactionPin,
-    decimal? amount
+    int amount
 );
