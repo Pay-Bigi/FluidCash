@@ -1,6 +1,7 @@
 ﻿using FluidCash.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection.Emit;
 
 namespace FluidCash.DataAccess.DbContext;
 
@@ -8,6 +9,13 @@ public class DataContext:IdentityDbContext
 {
     public DataContext(DbContextOptions<DataContext> options) : base(options)
     {
+    }
+    public void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        // Applies UTC to WAT conversion to all DateTime properties
+        modelBuilder.ApplyUtcToWatConversion();
+        modelBuilder.ApplyConfiguration(new DefaultEmailTemplateSeeding());
+        modelBuilder.ApplyConfiguration(new AppRoleSeeding());
     }
     public DbSet<Account> Accounts { get; set; }
     public DbSet<AppUser> AppUsers { get; set; }
