@@ -17,4 +17,6 @@ public class WalletTrading: BaseEntity
     public GiftCard? GiftCard { get; set; }
     public string? WalletId { get; set; }
     public Wallet? Wallet { get; set; }
+    public string? TransactionId { get; set; }
+    public WalletTransaction? Transaction { get; set; }
 }

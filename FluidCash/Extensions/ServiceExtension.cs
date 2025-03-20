@@ -35,7 +35,7 @@ public static class ServiceExtension
         string connectionString = Environment.GetEnvironmentVariable("FluidCashDB");
         services.AddDbContext<DataContext>(options =>
         options.UseSqlServer(connectionString)
-        .UseUpperCaseNamingConvention());
+        );
     }
 
     public static void

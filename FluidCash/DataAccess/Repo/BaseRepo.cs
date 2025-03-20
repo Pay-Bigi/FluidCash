@@ -6,13 +6,13 @@ namespace FluidCash.DataAccess.Repo;
 
 public sealed class BaseRepo<T> : IBaseRepo<T> where T : class, IBaseEntity
 {
-    private readonly DbSet<T> _dbSet;
     private readonly DataContext _dataContext;
+    private readonly DbSet<T> _dbSet;
 
     public BaseRepo(DataContext dataContext)
     {
-        _dbSet = dataContext.Set<T>();
         _dataContext = dataContext;
+        _dbSet = _dataContext.Set<T>();
     }
 
     public IQueryable<T> GetAll()
