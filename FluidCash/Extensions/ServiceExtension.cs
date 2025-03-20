@@ -1,28 +1,63 @@
-﻿using CloudinaryDotNet;
+﻿using Asp.Versioning;
+using CloudinaryDotNet;
 using FluidCash.DataAccess.DbContext;
 using FluidCash.DataAccess.Repo;
 using FluidCash.ExternalServicesRepo;
+using FluidCash.Helpers.ObjectFormatters.DTOs.CustomErrors;
+using FluidCash.Helpers.ObjectFormatters.ObjectWrapper;
 using FluidCash.Helpers.ServiceConfigs.External;
 using FluidCash.Helpers.ServiceConfigs.Internal;
 using FluidCash.IExternalServicesRepo;
+using FluidCash.IServiceRepo;
 using FluidCash.Models;
+using FluidCash.ServiceRepo;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using PayStack.Net;
 using StackExchange.Redis;
+using System.Text.Json.Serialization;
 using Account = CloudinaryDotNet.Account;
+using ValidationError = FluidCash.Helpers.ObjectFormatters.DTOs.CustomErrors.ValidationError;
 
 namespace FluidCash.Extensions;
 
 public static class ServiceExtension
 {
+
+    public static void
+    RegisterDbContext
+        (this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddDbContext<DataContext>(options =>
+        options.UseSqlServer(configuration.GetValue<string>("FluidCashDB"))
+        .UseUpperCaseNamingConvention());
+    }
+
+    public static void
+        RegisterBaseRpositories
+        (this IServiceCollection services)
+    {
+        services.AddScoped(typeof(IBaseRepo<>), typeof(BaseRepo<>));
+    }
+
     public static void
         ConfigureAspNetIdentity
         (this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddIdentity<AppUser, IdentityRole>()
+        services.AddIdentity<AppUser, AppRole>(o =>
+        {
+            o.Password.RequireDigit = true;
+            o.Password.RequireLowercase = true;
+            o.Password.RequireUppercase = true;
+            o.Password.RequireNonAlphanumeric = false;
+            o.Password.RequiredLength = 8;
+            o.Password.RequiredUniqueChars = 1;
+            o.User.RequireUniqueEmail = true;
+        })
             .AddEntityFrameworkStores<DataContext>()
             .AddDefaultTokenProviders()
             .AddTokenProvider<NumericPasswordResetTokenProvider<AppUser>>(providerName: "NumericPasswordReset");
@@ -32,25 +67,8 @@ public static class ServiceExtension
         {
             options.TokenLifespan = TimeSpan.FromMinutes(5); // Set token expiration time
         });
-    }
 
-    public static void
-        ConfigureRedisCache(this IServiceCollection services)
-    {
-        services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect("localhost:6379"));
-    }
-
-
-    public static void
-        ConfigureEmailService
-        (this IServiceCollection services, IConfigurationBuilder configurationBuilder)
-    {
-        IConfiguration configuration = configurationBuilder
-            .AddEnvironmentVariables("PAYBIGISMTP__")
-            .Build();
-        services.Configure<EmailConfig>(configuration);
-        services.AddScoped<IEmailProvider, EmailProvider>();
-        services.AddScoped<IEmailSender, EmailSender>();
+        services.AddScoped<UserManager<AppUser>>();
     }
 
     public static void
@@ -82,16 +100,8 @@ public static class ServiceExtension
             .AddEnvironmentVariables("JwtSettings_")
             .Build();
         services.Configure<JwtSettings>(configuration);
+        services.AddScoped<ITokenService, TokenService>();
     }
-
-
-
-
-
-
-
-
-
 
     public static void
         ConfigureControllers
@@ -108,12 +118,25 @@ public static class ServiceExtension
                     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
                     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
                 })
-                .AddOData(options => options
-                .AddRouteComponents("odata", GetAppCoreModel())
-                .Select().Filter().OrderBy()
-                .SetMaxTop(50)
-                .Count().Expand())
-                .AddXmlDataContractSerializerFormatters();
+                .AddXmlDataContractSerializerFormatters().ConfigureApiBehaviorOptions(opts =>
+            opts.InvalidModelStateResponseFactory = context =>
+            {
+                var errors = context.ModelState
+                    .Where(ms => ms.Value.Errors.Any())
+                    .SelectMany(ms => ms.Value.Errors
+                    .Select(e => new ValidationError
+                    {
+                        FieldName = ms.Key,
+                        ErrorMessage = e.ErrorMessage
+                    }))
+                    .ToList();
+
+                return new BadRequestObjectResult
+                (
+                    StandardResponse<IEnumerable<ValidationError>>.Failed
+                    (data: errors, errorMessage: "One or more validation errors occurred", 400)
+                );
+            });
     }
 
     public static void
@@ -140,79 +163,50 @@ public static class ServiceExtension
                 opts.SubstituteApiVersionInUrl = true;
             }
         );
-        //AddControllersFromAssemblies(services, "AuthenticationServices.Presentation", "UserMgtServices.Presentation");
     }
 
     public static void
-        RegisterContainerService
+        RegisterContainerServices
         (this IServiceCollection services)
     {
         services.AddScoped<IAccountMgtServices, AccountMgtServices>();
-        services.AddScoped<ITokenService, TokenService>();
-        services.AddScoped<IAppUserCmdMgtServices, AppUserCmdMgtServices>();
-        services.AddScoped<IWalletMgtServices, WalletMgtServices>();
-        services.AddScoped<PaystackServiceRequests, PaystackServiceHandlers>();
-        services.AddScoped<ITransactionCmdServices, TransactionCmdServices>();
-        services.AddScoped<IAppUserQueryMgtServices, AppUserQueryMgtServices>();
-        services.AddScoped<ITransactionQueryServices, TransactionQueryServices>();
-        services.AddScoped<IWalletQueryServices, WalletQueryServices>();
-        services.AddScoped<FlutterwaveServicesRequests, FlutterwaveServicesHandler>();
-        services.AddScoped<ICardMgtServices, CardMgtServices>();
+        services.AddScoped<IAuthServices, AuthServices>();
+        services.AddScoped<IGiftCardServices, GiftCardServices>();
+        services.AddScoped<ITradingServices, TradingServices>();
+        services.AddScoped<IWalletServices, WalletServices>();
+        //services.AddScoped<ITransactionServices, TransactionServices>();
     }
 
     public static void
-    RegisterDbContext
-        (this IServiceCollection services, IConfiguration configuration)
+        ConfigureRedisCache(this IServiceCollection services)
     {
-        services.AddDbContext<AppDbContext>(options =>
-        options.UseSqlServer(configuration.GetValue<string>("PayBigiDB")), ServiceLifetime.Scoped);
+        services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect("localhost:6379"));
+        services.AddScoped<IRedisCacheService, RedisCacheService>();
     }
 
     public static void
-        ConfigureAuthServices
-        (this IServiceCollection services, IConfiguration configuration)
+        ConfigureEmailService
+        (this IServiceCollection services, IConfigurationBuilder configurationBuilder)
     {
-        var validIssuer = configuration.GetValue<string>(key: "validIssuer");
-        var validAudience = configuration.GetValue<string>(key: "validAudience");
-
-        services.AddAuthentication("Bearer")
-            .AddJwtBearer("Bearer", options =>
-            {
-                options.Authority = validIssuer;
-                options.RequireHttpsMetadata = false; // Set to true in production
-                options.Audience = validAudience;
-
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidIssuer = validIssuer
-                };
-            });
+        IConfiguration configuration = configurationBuilder
+            .AddEnvironmentVariables("PAYBIGISMTP__")
+            .Build();
+        services.Configure<EmailConfig>(configuration);
+        services.AddScoped<IEmailProvider, EmailProvider>();
+        services.AddScoped<IEmailSender, EmailSender>();
     }
 
     public static void
-        ConfigureUserIdentityManager
+        ConfigurePayStackServices
         (this IServiceCollection services)
     {
-        services.AddIdentity<AppUser, AppRole>(o =>
+        services.AddSingleton<PayStackApi>(provder =>
         {
-            o.Password.RequireDigit = true;
-            o.Password.RequireLowercase = true;
-            o.Password.RequireUppercase = true;
-            o.Password.RequireNonAlphanumeric = false;
-            o.Password.RequiredLength = 8;
-            o.Password.RequiredUniqueChars = 1;
-            o.User.RequireUniqueEmail = true;
-        })
-            .AddEntityFrameworkStores<DataContext>()
-            .AddDefaultTokenProviders();
-        services.AddScoped<UserManager<AppUser>>();
-    }
-
-    public static void
-        RegisterBaseRpositories
-        (this IServiceCollection services)
-    {
-        services.AddScoped(typeof(IBaseRepo<>), typeof(BaseRepo<>));
+            var testOrLiveSecret = Environment.GetEnvironmentVariable("PayStackKey");
+            var payStackApi = new PayStackApi(testOrLiveSecret);
+            return payStackApi;
+        });
+        services.AddScoped<IPaystackServices, PaystackServices>();
     }
 
     public static void
@@ -273,17 +267,6 @@ public static class ServiceExtension
 
     }
 
-    public static void
-        ConfigurePayStackServices
-        (this IServiceCollection services)
-    {
-        services.AddSingleton<PayStackApi>(provder =>
-        {
-            var testOrLiveSecret = Environment.GetEnvironmentVariable("PayStackKey");
-            var payStackApi = new PayStackApi(testOrLiveSecret);
-            return payStackApi;
-        });
-    }
 
 
     //public static void

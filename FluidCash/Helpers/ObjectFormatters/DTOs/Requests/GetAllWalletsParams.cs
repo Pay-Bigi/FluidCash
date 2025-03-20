@@ -2,6 +2,6 @@
 
 public record GetAllWalletsParams
 (
-    string? walletId,
+    string? walletId
 
 );

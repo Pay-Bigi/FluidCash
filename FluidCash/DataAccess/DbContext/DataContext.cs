@@ -1,4 +1,5 @@
-﻿using FluidCash.Models;
+﻿using FluidCash.DataAccess.DataConfigs;
+using FluidCash.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection.Emit;

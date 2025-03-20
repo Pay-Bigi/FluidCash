@@ -136,99 +136,96 @@ public sealed class TradingServices : ITradingServices
     {
         var cardToBuyResponse = await _giftCardServices.GetGiftCardByIdAsync(buyGiftCardDto.giftCardId);
 
-        if (cardToBuyResponse.Succeeded)
+        if (cardToBuyResponse is not null)
         {
-            if (cardToBuyResponse.Data is not null)
+            var walletExists = await _walletServices.ConfirmWalletExistsAsync(buyGiftCardDto.walletId);
+
+            if (!walletExists)
             {
-                var walletExists = await _walletServices.ConfirmWalletExistsAsync(buyGiftCardDto.walletId);
+                string? errorMsg = "Invalid wallet account";
+                return StandardResponse<WalletTradingResponse>.Failed(null, errorMsg);
+            }
 
-                if (!walletExists)
+            var exchangeRate = cardToBuyResponse.GiftCardRates
+                .FirstOrDefault(x => x.giftCardRateId == buyGiftCardDto.giftCardRateId)?.rate;
+            var exchangeValue = exchangeRate * buyGiftCardDto.amount;
+
+            if (buyGiftCardDto.payFromWallet)
+            {
+                var debitPayload = new CreditAndDebitWalletParams(buyGiftCardDto.walletId, buyGiftCardDto.amount);
+                var debitWalletSucceded = await _walletServices.DebitWalletAsync(debitPayload, userId);
+                if (!debitWalletSucceded)
                 {
-                    string? errorMsg = "Invalid wallet account";
-                    return StandardResponse<WalletTradingResponse>.Failed(null, errorMsg);
+                    string? errorMsg = "Insufficient Balance";
+                    return StandardResponse<WalletTradingResponse>.Failed(data: null, errorMsg);
                 }
-
-                var exchangeRate = cardToBuyResponse.Data.GiftCardRates
-                    .FirstOrDefault(x => x.giftCardRateId == buyGiftCardDto.giftCardRateId)?.rate;
-                var exchangeValue = exchangeRate * buyGiftCardDto.amount;
-
-                if (buyGiftCardDto.payFromWallet)
+            }
+            else
+            {
+                if (buyGiftCardDto.isPaymentMade)
                 {
-                    var debitPayload = new CreditAndDebitWalletParams(buyGiftCardDto.walletId, buyGiftCardDto.amount);
-                    var debitWalletSucceded = await _walletServices.DebitWalletAsync(debitPayload, userId);
-                    if (!debitWalletSucceded)
+                    var confirmPaymentResponse = _paystackServices.VerifyTransaction(buyGiftCardDto.paystackTransactionRef);
+                    if (!confirmPaymentResponse.Succeeded)
                     {
-                        string? errorMsg = "Insufficient Balance";
-                        return StandardResponse<WalletTradingResponse>.Failed(data: null, errorMsg);
+                        string? errorMsg = "Payment verification failed. Kindly retry or contact your service provider";
+                        return StandardResponse<WalletTradingResponse>.Failed(null, errorMsg);
                     }
                 }
                 else
                 {
-                    if (buyGiftCardDto.isPaymentMade)
+                    //Update to user mail
+
+                    string? userMail = string.Empty;
+                    int exchangeAmount = Convert.ToInt16(exchangeValue);
+                    var transactionInitiationParams = new InitializePaymentParams(userMail, exchangeAmount);
+                    var initiateTransactionResponse = _paystackServices.InitiateTransaction(transactionInitiationParams);
+                    if (initiateTransactionResponse.Succeeded)
                     {
-                        var confirmPaymentResponse = _paystackServices.VerifyTransaction(buyGiftCardDto.paystackTransactionRef);
-                        if (!confirmPaymentResponse.Succeeded)
-                        {
-                            string? errorMsg = "Payment verification failed. Kindly retry or contact your service provider";
-                            return StandardResponse<WalletTradingResponse>.Failed(null, errorMsg);
-                        }
+                        var dataToReturn = initiateTransactionResponse.Data;
+                        string paymentPayLoad = JsonSerializer.Serialize(dataToReturn);
+                        return StandardResponse<WalletTradingResponse>.Pending(data: null, message: paymentPayLoad);
                     }
-                    else
-                    {
-                        //Update to user mail
-
-                        string? userMail = string.Empty;
-                        int exchangeAmount = Convert.ToInt16(exchangeValue);
-                        var transactionInitiationParams = new InitializePaymentParams(userMail, exchangeAmount);
-                        var initiateTransactionResponse = _paystackServices.InitiateTransaction(transactionInitiationParams);
-                        if (initiateTransactionResponse.Succeeded)
-                        {
-                            var dataToReturn = initiateTransactionResponse.Data;
-                            string paymentPayLoad = JsonSerializer.Serialize(dataToReturn);
-                            return StandardResponse<WalletTradingResponse>.Pending(data: null, message: paymentPayLoad);
-                        }
-                        var errorMsg = initiateTransactionResponse.Message;
-                        return StandardResponse<WalletTradingResponse>.Failed(data: null, errorMsg);
-                    }                    
+                    var errorMsg = initiateTransactionResponse.Message;
+                    return StandardResponse<WalletTradingResponse>.Failed(data: null, errorMsg);
                 }
-                var trade = new WalletTrading
-                {
-                    Status = TradingStatus.Pending,
-                    Type = TradeType.Buy,
-                    ExchangeValue = exchangeValue,
-                    CardAmount = buyGiftCardDto.amount,
-                    ExchangeRate = exchangeRate,
-                    GiftCardId = buyGiftCardDto.giftCardId,
-                    WalletId = buyGiftCardDto.walletId
-                };
-                var transaction = new WalletTransaction
-                {
-                    Amount = buyGiftCardDto.amount,
-                    TransactionReference = trade.Id,
-                    Type = TransactionType.GiftCardPurchase,
-                    WalletId = buyGiftCardDto.walletId,
-                    TradingId = trade.Id
-                };
-                await _tradingRepo.AddAsync(trade);
-                await _transactionRepo.AddAsync(transaction);
-                await _tradingRepo.SaveChangesAsync();
-
-                var tradeResponse = new WalletTradingResponse
-                (
-                    tradeId: trade.Id,
-                    exchangeValue: trade.ExchangeValue,
-                    cardImageUrl: trade.CardImageUrl,
-                    cardAmount: trade.CardAmount,
-                    exchangeRate: trade.ExchangeRate,
-                    tradeDateTime: trade.CreatedAt,
-                    tradeType: trade.Type,
-                    validUntil: trade.ValidUntil,
-                    otherDetails: trade.OtherDetails,
-                    giftCardDetails: cardToBuyResponse.Data,
-                    walletId: trade.WalletId
-                );
-                return StandardResponse<WalletTradingResponse>.Success(tradeResponse);
             }
+            var trade = new WalletTrading
+            {
+                Status = TradingStatus.Pending,
+                Type = TradeType.Buy,
+                ExchangeValue = exchangeValue,
+                CardAmount = buyGiftCardDto.amount,
+                ExchangeRate = exchangeRate,
+                GiftCardId = buyGiftCardDto.giftCardId,
+                WalletId = buyGiftCardDto.walletId
+            };
+            var transaction = new WalletTransaction
+            {
+                Amount = buyGiftCardDto.amount,
+                TransactionReference = trade.Id,
+                Type = TransactionType.GiftCardPurchase,
+                WalletId = buyGiftCardDto.walletId,
+                TradingId = trade.Id
+            };
+            await _tradingRepo.AddAsync(trade);
+            await _transactionRepo.AddAsync(transaction);
+            await _tradingRepo.SaveChangesAsync();
+
+            var tradeResponse = new WalletTradingResponse
+            (
+                tradeId: trade.Id,
+                exchangeValue: trade.ExchangeValue,
+                cardImageUrl: trade.CardImageUrl,
+                cardAmount: trade.CardAmount,
+                exchangeRate: trade.ExchangeRate,
+                tradeDateTime: trade.CreatedAt,
+                tradeType: trade.Type,
+                validUntil: trade.ValidUntil,
+                otherDetails: trade.OtherDetails,
+                giftCardDetails: cardToBuyResponse,
+                walletId: trade.WalletId
+            );
+            return StandardResponse<WalletTradingResponse>.Success(tradeResponse);
         }
         string? errorMessage = "Card currently unavailable. Try again later";
         return StandardResponse<WalletTradingResponse>.Failed(null, errorMessage);
@@ -422,72 +419,69 @@ public sealed class TradingServices : ITradingServices
     {
         var cardToSellResponse = await _giftCardServices.GetGiftCardByIdAsync(sellGiftCardDto.giftCardId);
 
-        if (cardToSellResponse.Succeeded)
+        if (cardToSellResponse is not null)
         {
-            if (cardToSellResponse.Data is not null)
-            {
-                var walletExists = await _walletRepo.ExistsByConditionAsync(x => x.Id == sellGiftCardDto.walletId);
+            var walletExists = await _walletServices.ConfirmWalletExistsAsync(sellGiftCardDto.walletId);
 
-                if (!walletExists)
+            if (!walletExists)
+            {
+                string? errorMsg = "Invalid wallet account";
+                return StandardResponse<WalletTradingResponse>.Failed(null, errorMsg);
+            }
+
+
+            var exchangeRate = cardToSellResponse.GiftCardRates
+                .FirstOrDefault(x => x.giftCardRateId == sellGiftCardDto.giftCardRateId)?.rate;
+            var trade = new WalletTrading
+            {
+                Status = TradingStatus.Pending,
+                Type = TradeType.Buy,
+                ExchangeValue = exchangeRate * sellGiftCardDto.cardAmount,
+                CardAmount = sellGiftCardDto.cardAmount,
+                ExchangeRate = exchangeRate,
+                GiftCardId = sellGiftCardDto.giftCardId,
+                WalletId = sellGiftCardDto.walletId
+            };
+            if (sellGiftCardDto.cardImage is not null)
+            {
+                var imageUploadDetails = await _cloudinaryServices.UploadFileToCloudinaryAsync(sellGiftCardDto.cardImage);
+                if (!imageUploadDetails.Succeeded)
                 {
-                    string? errorMsg = "Invalid wallet account";
+                    string? errorMsg = "Card image upload failed. Kindly retry";
                     return StandardResponse<WalletTradingResponse>.Failed(null, errorMsg);
                 }
-
-
-                var exchangeRate = cardToSellResponse.Data.GiftCardRates
-                    .FirstOrDefault(x => x.giftCardRateId == sellGiftCardDto.giftCardRateId)?.rate;
-                var trade = new WalletTrading
-                {
-                    Status = TradingStatus.Pending,
-                    Type = TradeType.Buy,
-                    ExchangeValue = exchangeRate * sellGiftCardDto.cardAmount,
-                    CardAmount = sellGiftCardDto.cardAmount,
-                    ExchangeRate = exchangeRate,
-                    GiftCardId = sellGiftCardDto.giftCardId,
-                    WalletId = sellGiftCardDto.walletId
-                };
-                if (sellGiftCardDto.cardImage is not null)
-                {
-                    var imageUploadDetails = await _cloudinaryServices.UploadFileToCloudinaryAsync(sellGiftCardDto.cardImage);
-                    if (!imageUploadDetails.Succeeded)
-                    {
-                        string? errorMsg = "Card image upload failed. Kindly retry";
-                        return StandardResponse<WalletTradingResponse>.Failed(null, errorMsg);
-                    }
-                    trade.CardImageUrl = imageUploadDetails.Data.fileUrlPath;
-                    trade.CardImageId = imageUploadDetails.Data.filePublicId;
-                }
-
-                var transaction = new WalletTransaction
-                {
-                    Amount = sellGiftCardDto.cardAmount,
-                    TransactionReference = trade.Id,
-                    Type = TransactionType.GiftCardSale,
-                    WalletId = sellGiftCardDto.walletId,
-                    TradingId = trade.Id
-                };
-                await _tradingRepo.AddAsync(trade);
-                await _transactionRepo.AddAsync(transaction);
-                await _tradingRepo.SaveChangesAsync();
-
-                var exchangeValue = trade.ExchangeValue;
-                var tradeResponse = new WalletTradingResponse
-                (
-                    tradeId: trade.Id,
-                    exchangeValue: trade.ExchangeValue,
-                    cardImageUrl: trade.CardImageUrl,
-                    cardAmount: trade.CardAmount,
-                    exchangeRate: trade.ExchangeRate,
-                    tradeDateTime: trade.CreatedAt,
-                    tradeType: trade.Type,
-                    validUntil: trade.ValidUntil,
-                    otherDetails: trade.OtherDetails,
-                    giftCardDetails: cardToSellResponse.Data,
-                    walletId: trade.WalletId
-                );
-                return StandardResponse<WalletTradingResponse>.Success(tradeResponse);
+                trade.CardImageUrl = imageUploadDetails.Data.fileUrlPath;
+                trade.CardImageId = imageUploadDetails.Data.filePublicId;
             }
+
+            var transaction = new WalletTransaction
+            {
+                Amount = sellGiftCardDto.cardAmount,
+                TransactionReference = trade.Id,
+                Type = TransactionType.GiftCardSale,
+                WalletId = sellGiftCardDto.walletId,
+                TradingId = trade.Id
+            };
+            await _tradingRepo.AddAsync(trade);
+            await _transactionRepo.AddAsync(transaction);
+            await _tradingRepo.SaveChangesAsync();
+
+            var exchangeValue = trade.ExchangeValue;
+            var tradeResponse = new WalletTradingResponse
+            (
+                tradeId: trade.Id,
+                exchangeValue: trade.ExchangeValue,
+                cardImageUrl: trade.CardImageUrl,
+                cardAmount: trade.CardAmount,
+                exchangeRate: trade.ExchangeRate,
+                tradeDateTime: trade.CreatedAt,
+                tradeType: trade.Type,
+                validUntil: trade.ValidUntil,
+                otherDetails: trade.OtherDetails,
+                giftCardDetails: cardToSellResponse,
+                walletId: trade.WalletId
+            );
+            return StandardResponse<WalletTradingResponse>.Success(tradeResponse);
         }
         string? errorMessage = "Card currently unavailable. Try again later";
         return StandardResponse<WalletTradingResponse>.Failed(null, errorMessage);
