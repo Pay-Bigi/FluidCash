@@ -2,7 +2,7 @@
 
 namespace FluidCash.Models;
 
-public class AppUser : IdentityUser<string>
+public class AppUser : IdentityUser
 {
     public override string? Id { get; set; } = Ulid.NewUlid().ToString();
     public string? CreatedBy { get; set; }

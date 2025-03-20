@@ -32,8 +32,9 @@ public static class ServiceExtension
     RegisterDbContext
         (this IServiceCollection services, IConfiguration configuration)
     {
+        string connectionString = Environment.GetEnvironmentVariable("FluidCashDB");
         services.AddDbContext<DataContext>(options =>
-        options.UseSqlServer(configuration.GetValue<string>("FluidCashDB"))
+        options.UseSqlServer(connectionString)
         .UseUpperCaseNamingConvention());
     }
 
@@ -146,7 +147,7 @@ public static class ServiceExtension
         services.AddApiVersioning
         (opts =>
         {
-            opts.DefaultApiVersion = new ApiVersion(1);
+            opts.DefaultApiVersion = new ApiVersion(1.0);
             opts.ReportApiVersions = true;
             opts.AssumeDefaultVersionWhenUnspecified = true;
             opts.ApiVersionReader = ApiVersionReader.Combine
@@ -241,7 +242,7 @@ public static class ServiceExtension
     {
         services.AddSwaggerGen(options =>
         {
-            //options.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
+            options.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
             var securityScheme = new OpenApiSecurityScheme
             {
                 Name = "Authorization",

@@ -6,7 +6,6 @@ using FluidCash.IExternalServicesRepo;
 using FluidCash.IServiceRepo;
 using FluidCash.Models;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
 
 namespace FluidCash.ServiceRepo;
 
@@ -93,7 +92,7 @@ public sealed class AccountMgtServices : IAccountMgtServices
     }
 
     public async Task<StandardResponse<AccountResponseDto>>
-        GetUserAccountsAsync
+        GetUserAccountAsync
         (string accountId)
     {
         var account = await _accountRepo.GetNonDeletedByCondition(acc => acc.Id == accountId)
@@ -250,6 +249,7 @@ public sealed class AccountMgtServices : IAccountMgtServices
         if (is2FaEnabled is true)
         {
             //Create and Send Otp
+            throw new NotImplementedException();
         }
         var withdrawalPayload = new InitiateTransferParams
             (

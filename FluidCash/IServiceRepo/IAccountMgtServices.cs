@@ -20,7 +20,7 @@ public interface IAccountMgtServices
         GetUserDashboardAsync(string userId);
 
     Task<StandardResponse<AccountResponseDto>> 
-        GetUserAccountsAsync (string accountId);
+        GetUserAccountAsync (string accountId);
 
     Task<StandardResponse<string>>
         UploadDpAsync(UploadDpParams uploadDpParams, string? userId);

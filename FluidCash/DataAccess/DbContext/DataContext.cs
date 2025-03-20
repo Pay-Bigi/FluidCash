@@ -6,13 +6,14 @@ using System.Reflection.Emit;
 
 namespace FluidCash.DataAccess.DbContext;
 
-public class DataContext:IdentityDbContext
+public sealed class DataContext:IdentityDbContext<AppUser>
 {
     public DataContext(DbContextOptions<DataContext> options) : base(options)
     {
     }
-    public void OnModelCreating(ModelBuilder modelBuilder)
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
         // Applies UTC to WAT conversion to all DateTime properties
         modelBuilder.ApplyUtcToWatConversion();
         modelBuilder.ApplyConfiguration(new DefaultEmailTemplateSeeding());
