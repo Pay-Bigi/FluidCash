@@ -54,13 +54,13 @@ public class AuthServices : IAuthServices
                 userAccount.dpCloudinaryId = imageUploadDetails.Data.filePublicId;
             }
         }
+        await _userManager.CreateAsync(appUser, createAccountDto.password);
         var accCreationSuccessful = await _accountMgtServices.CreateUserAccountAsync(userAccount);
         if (!accCreationSuccessful)
         {
             string errorMsg = "Account creation failed";
             return StandardResponse<string>.Failed(data: null, errorMessage: errorMsg);
         }
-        await _userManager.CreateAsync(appUser, createAccountDto.password);
 
         string? successMsg = "Account successfully created. Proceed to login";
         return StandardResponse<string>.Success(successMsg, statusCode: 201);
@@ -142,17 +142,22 @@ public class AuthServices : IAuthServices
 
     public async Task<StandardResponse<string>>
         SetTransactionPasswordWithOtpAsync
-        (TransactionPasswordParams passwordParams)
+        (SetTransactionPasswordWithOtpParams passwordParams, string? userId)
     {
-        var appUser = await _userManager.FindByIdAsync(passwordParams.userId);
+        var appUser = await _userManager.FindByIdAsync(userId);
         if (appUser is null)
         {
             string errorMsg = "Invalid user Address";
             return StandardResponse<string>.Failed(data: null, errorMessage: errorMsg);
         }
-
+        var otpConfirmed = await _redisCacheService.ExistsAsync(userId);
+        if (!otpConfirmed)
+        {
+            string? errorMsg = "Invalid or expired token";
+            return StandardResponse<string>.Failed(data: null, errorMessage: errorMsg);
+        }
         var pwHasher = new PasswordHasher<string>();
-        string hashedPassword = pwHasher.HashPassword(passwordParams.userId, passwordParams.transactionPassword);
+        string hashedPassword = pwHasher.HashPassword(userId, passwordParams.transactionPassword);
         appUser.HashedTransactionPin = hashedPassword;
 
         await _userManager.UpdateAsync(appUser);
@@ -163,15 +168,15 @@ public class AuthServices : IAuthServices
 
     public async Task<StandardResponse<bool>>
         VerifyTransactionPasswordAsync
-        (TransactionPasswordParams passwordParams)
+        (string? transactionPassword, string? userId)
     {
         string errorMsg = "Invalid user credentials";
-        var user = await _userManager.FindByIdAsync(passwordParams.userId);
+        var user = await _userManager.FindByIdAsync(userId);
         if (user is null)
             return StandardResponse<bool>.Failed(data: false, errorMessage: errorMsg);
         var pwHasher = new PasswordHasher<string>();
 
-        var verifyPassword = pwHasher.VerifyHashedPassword(passwordParams.userId, user.HashedTransactionPin, passwordParams.transactionPassword);
+        var verifyPassword = pwHasher.VerifyHashedPassword(userId, user.HashedTransactionPin, transactionPassword);
 
         if (verifyPassword == PasswordVerificationResult.Failed)
             return StandardResponse<bool>.Failed(data: false, errorMessage: errorMsg);

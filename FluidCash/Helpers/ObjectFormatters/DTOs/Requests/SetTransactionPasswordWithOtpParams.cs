@@ -1,7 +1,7 @@
 ﻿namespace FluidCash.Helpers.ObjectFormatters.DTOs.Requests;
 
-public record TransactionPasswordParams
+public record SetTransactionPasswordWithOtpParams
 (
-    string? userId,
+    string? otp,
     string? transactionPassword
 );

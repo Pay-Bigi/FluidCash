@@ -24,9 +24,9 @@ public interface IAuthServices
 
     Task<StandardResponse<string>>
         SetTransactionPasswordWithOtpAsync
-        (TransactionPasswordParams passwordParams);
+        (SetTransactionPasswordWithOtpParams passwordParams, string? userId);
 
     Task<StandardResponse<bool>>
         VerifyTransactionPasswordAsync
-        (TransactionPasswordParams passwordParams);
+        (string? transactionPassword, string? userId);
 }

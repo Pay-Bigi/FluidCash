@@ -41,7 +41,7 @@ public sealed class DataContext:IdentityDbContext<AppUser>
             .HasMany(w => w.Transactions)
             .WithOne(t => t.Wallet)
             .HasForeignKey(t => t.WalletId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
 
         // 🔹 One-to-Many: Wallet ↔ WalletTrading
         modelBuilder.Entity<Wallet>()
@@ -69,7 +69,7 @@ public sealed class DataContext:IdentityDbContext<AppUser>
             .HasOne(t => t.Trading)
             .WithOne(g=>g.Transaction) // If one transaction per trade, use .WithOne()
             .HasForeignKey<WalletTrading>(t => t.TransactionId)
-            .OnDelete(DeleteBehavior.SetNull); // Prevent deletion cascade
+            .OnDelete(DeleteBehavior.Cascade); // Prevent deletion cascade
 
         modelBuilder.ApplyUtcToWatConversion();
         modelBuilder.ApplyConfiguration(new DefaultEmailTemplateSeeding());

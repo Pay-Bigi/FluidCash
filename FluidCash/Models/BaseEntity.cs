@@ -2,7 +2,7 @@
 
 public class BaseEntity: IBaseEntity
 {
-    public string? Id { get; set; }
+    public string? Id { get; set; } = Ulid.NewUlid().ToString();
     public string? CreatedBy { get; set; }
     public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
     public string? UpdatedBy { get; set; }
