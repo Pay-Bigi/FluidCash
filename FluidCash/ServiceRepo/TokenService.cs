@@ -27,7 +27,8 @@ public sealed class TokenService : ITokenService
         var roles = await _userManager.GetRolesAsync(user);
         var claim = new List<Claim>
         {
-            new Claim(ClaimTypes.Email, user.Email)
+            new Claim(ClaimTypes.Email, user.Email),
+            new Claim(ClaimTypes.NameIdentifier, user.Id)
         };
 
         foreach (var role in roles)

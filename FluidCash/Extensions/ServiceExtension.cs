@@ -3,7 +3,6 @@ using CloudinaryDotNet;
 using FluidCash.DataAccess.DbContext;
 using FluidCash.DataAccess.Repo;
 using FluidCash.ExternalServicesRepo;
-using FluidCash.Helpers.ObjectFormatters.DTOs.CustomErrors;
 using FluidCash.Helpers.ObjectFormatters.ObjectWrapper;
 using FluidCash.Helpers.ServiceConfigs.External;
 using FluidCash.Helpers.ServiceConfigs.Internal;
@@ -15,10 +14,12 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using PayStack.Net;
 using StackExchange.Redis;
+using System.Text;
 using System.Text.Json.Serialization;
 using Account = CloudinaryDotNet.Account;
 using ValidationError = FluidCash.Helpers.ObjectFormatters.DTOs.CustomErrors.ValidationError;
@@ -76,11 +77,15 @@ public static class ServiceExtension
         ConfigureAuthServices
         (this IServiceCollection services, IConfiguration configuration)
     {
-        var validIssuer = configuration.GetValue<string>(key: "ValidIssuer");
-        var validAudience = configuration.GetValue<string>(key: "ValidAudience");
+        var validIssuer = Environment.GetEnvironmentVariable("JwtSettings_validIssuer");
+        var validAudience = Environment.GetEnvironmentVariable( "JwtSettings_validAudience");
 
-        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+        services.AddAuthentication(options => {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+            .AddJwtBearer( authenticationScheme: "Bearer", options =>
             {
                 options.Authority = validIssuer;
                 options.RequireHttpsMetadata = false; // Set to true in production
@@ -88,7 +93,13 @@ public static class ServiceExtension
 
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
-                    ValidIssuer = validIssuer
+                    ValidateIssuer = true,
+                    ValidIssuer = validIssuer,
+                    ValidateAudience = true,
+                    ValidAudience = validAudience,
+                    ValidateIssuerSigningKey = true, // Ensure signature is validated
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JwtSettings_TokenKey")))
+
                 };
             });
     }

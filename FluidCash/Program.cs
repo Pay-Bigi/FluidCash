@@ -11,13 +11,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.RegisterDbContext(builder.Configuration);
 builder.Services.RegisterBaseRpositories();
 builder.Services.ConfigureAspNetIdentity(builder.Configuration);
-builder.Services.ConfigureAuthServices(builder.Configuration);
 builder.Services.ConfigureTokenService(builder.Configuration);
 builder.Services.RegisterContainerServices();
 builder.Services.ConfigureRedisCache();
 builder.Services.ConfigureEmailService(builder.Configuration);
 builder.Services.ConfigurePayStackServices();
 builder.Services.ConfigureCloudinary(builder.Configuration);
+builder.Services.ConfigureAuthServices(builder.Configuration);
 
 builder.Services.ConfigureControllers();
 builder.Services.ConfigureApiVersioning();

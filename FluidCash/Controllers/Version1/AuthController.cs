@@ -1,5 +1,6 @@
 ﻿using FluidCash.Helpers.ObjectFormatters.DTOs.Requests;
 using FluidCash.IServiceRepo;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -54,11 +55,12 @@ public class AuthController:V1BaseController
         return StatusCode(response.StatusCode, response);
     }
 
+    [Authorize]
     [HttpPost("set-transaction-password-with-otp")]
     public async Task<IActionResult> SetTransactionPasswordWithOtpAsync
         ([FromBody] SetTransactionPasswordWithOtpParams setTransactionPasswordWithOtpParams)
     {
-        string? userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var response = await _authServices.SetTransactionPasswordWithOtpAsync(setTransactionPasswordWithOtpParams, userId);
         return StatusCode(response.StatusCode, response);
     }
