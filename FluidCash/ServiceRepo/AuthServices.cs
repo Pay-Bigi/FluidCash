@@ -18,6 +18,8 @@ public class AuthServices : IAuthServices
     private readonly ITokenService _tokenService;
     private readonly IRedisCacheService _redisCacheService;
     private readonly IEmailSender _emailSender;
+    const string tokenProvider = "NumericPasswordReset";
+    const string resetPasswordPurpose = "ResetPassword";
 
     public AuthServices(IAccountMgtServices accountMgtServices, ICloudinaryServices cloudinaryServices,
         UserManager<AppUser> userManager, ITokenService tokenService, IRedisCacheService redisCacheService,
@@ -93,7 +95,7 @@ public class AuthServices : IAuthServices
             string errorMsg = "Invalid credentials";
             return StandardResponse<string>.Failed(data: null, errorMessage: errorMsg);
         }
-        var token = await _userManager.GenerateUserTokenAsync(user, "NumericPasswordReset", "ResetPassword");
+        var token = await _userManager.GenerateUserTokenAsync(user, tokenProvider, resetPasswordPurpose);
         var otpUpdateResponse = await ResetAndSendOtpAsync(user.Email, user.UserName, authToken: token);
         return otpUpdateResponse;
     }
@@ -115,12 +117,28 @@ public class AuthServices : IAuthServices
             errorMsg = "Invalid or expired token";
             return StandardResponse<string>.Failed(errorMsg);
         }
-        var passwordResetResponse = await _userManager.ResetPasswordAsync(user, token: resetPasswordWIthOtpParams.otp, newPassword: resetPasswordWIthOtpParams.newPassword);
-        if (!passwordResetResponse.Succeeded)
+        var isValidToken = await _userManager.VerifyUserTokenAsync(user, tokenProvider, resetPasswordPurpose, resetPasswordWIthOtpParams.otp);
+
+        if (!isValidToken)
         {
-            errorMsg = passwordResetResponse.Errors.FirstOrDefault().ToString();
-            return StandardResponse<string>.Failed(errorMsg);
+            errorMsg = "Invalid OTP";
+            return StandardResponse<string>.Failed(data: null, errorMessage: errorMsg);
         }
+        // If valid, reset the password manually
+        var resetPasswordResult = await _userManager.RemovePasswordAsync(user);
+        if (!resetPasswordResult.Succeeded)
+        {
+            errorMsg = "Failed to remove old password";
+            return StandardResponse<string>.Failed(data: null, errorMessage: errorMsg);
+        }
+
+        var addPasswordResult = await _userManager.AddPasswordAsync(user, resetPasswordWIthOtpParams.newPassword);
+        if (!addPasswordResult.Succeeded)
+        {
+            errorMsg = "Failed to set new password";
+            return StandardResponse<string>.Failed(data: null, errorMessage: errorMsg);
+        }
+
         string successMsg = "Password reset successful. Kindly proceed to login";
         return StandardResponse<string>.Success(data: successMsg);
     }
@@ -192,7 +210,8 @@ public class AuthServices : IAuthServices
         (string userMail, string otp)
     {
         //confirm OTP from Redis using encrypted user mail as key
-        var otoExists = await _redisCacheService.ExistsAsync(userMail);
+        var savedOtp = await _redisCacheService.GetAsync<string>(userMail);
+        bool otoExists = otp == savedOtp;
         var otpRemoved = await _redisCacheService.RemoveAsync(userMail);
         return otoExists;
     }
