@@ -15,6 +15,7 @@ public class AuthController:V1BaseController
         _authServices = authServices;
     }
 
+    [AllowAnonymous]
     [HttpPost("create-account")]
     public async Task<IActionResult> CreateAccountAsync
         ([FromForm] CreateAccountParams createAccountDto)
@@ -23,6 +24,7 @@ public class AuthController:V1BaseController
         return StatusCode(response.StatusCode, response);
     }
 
+    [AllowAnonymous]
     [HttpPost("login")]
     public async Task<IActionResult> LoginAsync
         ([FromBody] LoginParams loginDto)
@@ -31,6 +33,7 @@ public class AuthController:V1BaseController
         return StatusCode(response.StatusCode, response);
     }
 
+    [AllowAnonymous]
     [HttpPost("reset-password")]
     public async Task<IActionResult> ResetPasswordAsync
         ([FromBody] string userEmail)
@@ -39,6 +42,7 @@ public class AuthController:V1BaseController
         return StatusCode(response.StatusCode, response);
     }
 
+    [AllowAnonymous]
     [HttpPost("reset-password-with-otp")]
     public async Task<IActionResult> ResetPasswordWIthOtpAsync
         ([FromBody] ResetPasswordWIthOtpParams resetPasswordWIthOtpParams)
@@ -46,7 +50,7 @@ public class AuthController:V1BaseController
         var response = await _authServices.ResetPasswordWIthOtpAsync(resetPasswordWIthOtpParams);
         return StatusCode(response.StatusCode, response);
     }
-
+    
     [HttpPost("set-transaction-password")]
     public async Task<IActionResult> SetTransactionPasswordAsync
         ([FromForm] string userEmail)
@@ -55,7 +59,6 @@ public class AuthController:V1BaseController
         return StatusCode(response.StatusCode, response);
     }
 
-    [Authorize]
     [HttpPost("set-transaction-password-with-otp")]
     public async Task<IActionResult> SetTransactionPasswordWithOtpAsync
         ([FromBody] SetTransactionPasswordWithOtpParams setTransactionPasswordWithOtpParams)
