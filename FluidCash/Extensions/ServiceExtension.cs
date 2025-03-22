@@ -189,12 +189,22 @@ public static class ServiceExtension
         //services.AddScoped<ITransactionServices, TransactionServices>();
     }
 
-    public static void
-        ConfigureRedisCache(this IServiceCollection services)
+    public static void ConfigureRedisCache(this IServiceCollection services)
     {
-        services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect("localhost:6379"));
+        var redisHost = Environment.GetEnvironmentVariable("Redis_Host");
+        var redisUser = Environment.GetEnvironmentVariable("Redis_User");
+        var redisPass = Environment.GetEnvironmentVariable("Redis_Password");
+        services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(new ConfigurationOptions
+        {
+            EndPoints = { { redisHost, 10324 } },
+            User = redisUser,
+            Password = redisPass,
+            Ssl = true,  // Enable SSL if required
+            AbortOnConnectFail = false // Prevents app from crashing if Redis is unavailable
+        }));
         services.AddScoped<IRedisCacheService, RedisCacheService>();
     }
+
 
     public static void
         ConfigureEmailService
