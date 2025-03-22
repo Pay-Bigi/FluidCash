@@ -189,7 +189,9 @@ public static class ServiceExtension
         //services.AddScoped<ITransactionServices, TransactionServices>();
     }
 
-    public static void ConfigureRedisCache(this IServiceCollection services)
+    public static void 
+        ConfigureRedisCache
+        (this IServiceCollection services)
     {
         var redisHost = Environment.GetEnvironmentVariable("Redis_Host");
         var redisUser = Environment.GetEnvironmentVariable("Redis_User");
@@ -199,8 +201,11 @@ public static class ServiceExtension
             EndPoints = { { redisHost, 10324 } },
             User = redisUser,
             Password = redisPass,
-            Ssl = true,  // Enable SSL if required
-            AbortOnConnectFail = false // Prevents app from crashing if Redis is unavailable
+            ConnectRetry = 3,
+            ReconnectRetryPolicy = new ExponentialRetry(5000),
+            KeepAlive = 180,
+            Ssl = false, // Set to true if SSL is required
+            AbortOnConnectFail = false // Set to false prevents app from crashing if Redis is unavailable
         }));
         services.AddScoped<IRedisCacheService, RedisCacheService>();
     }
