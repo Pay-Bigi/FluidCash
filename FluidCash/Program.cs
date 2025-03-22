@@ -3,7 +3,7 @@ using FluidCash.Extensions;
 using FluidCash.LogConfigs;
 using FluidCash.Middlewares;
 
-LogConfigurator.ConfigureLogger(); 
+LogConfigurator.ConfigureLogger();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,11 +28,10 @@ builder.Services.ConfigureSwaggerGen();
 var app = builder.Build();
 app.ConfigureExceptionHandler();
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+
+app.UseSwagger();
+app.UseSwaggerUI();
+
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
