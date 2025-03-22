@@ -7,6 +7,6 @@ public class BaseEntity: IBaseEntity
     public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
     public string? UpdatedBy { get; set; }
     public DateTime? UpdatedAt { get; set; }
-    public bool? IsDeleted { get; set; }
+    public bool IsDeleted { get; set; } = false;
     public DateTime? DeletedAt { get; set; }
 }

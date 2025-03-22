@@ -32,7 +32,7 @@ public sealed class BaseRepo<T> : IBaseRepo<T> where T : class, IBaseEntity
         GetAllNonDeleted()
     {
         return _dbSet
-            .Where(t => !t.IsDeleted.Value)
+            .Where(t => !t.IsDeleted)
             .AsNoTracking();
     }
 
@@ -41,8 +41,7 @@ public sealed class BaseRepo<T> : IBaseRepo<T> where T : class, IBaseEntity
         (Expression<Func<T, bool>> condition)
     {
         return _dbSet.Where(condition)
-            .Where(t => !t.IsDeleted.Value)
-            .AsNoTracking();
+            .Where(t => !t.IsDeleted);
 
     }
 
@@ -50,7 +49,7 @@ public sealed class BaseRepo<T> : IBaseRepo<T> where T : class, IBaseEntity
         ExistsByConditionAsync
         (Expression<Func<T, bool>> condition)
     {
-        return await _dbSet.Where(t => !t.IsDeleted.Value)
+        return await _dbSet.Where(t => !t.IsDeleted)
             .AnyAsync(condition);
 
     }

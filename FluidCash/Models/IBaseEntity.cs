@@ -2,5 +2,5 @@
 
 public interface IBaseEntity
 {
-    public bool? IsDeleted { get; set; }
+    public bool IsDeleted { get; set; }
 }

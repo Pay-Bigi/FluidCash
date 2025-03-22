@@ -4,5 +4,5 @@ namespace FluidCash.Models;
 
 public class AppRole : IdentityRole, IBaseEntity
 {
-    public bool? IsDeleted { get; set; }
+    public bool IsDeleted { get; set; }
 }

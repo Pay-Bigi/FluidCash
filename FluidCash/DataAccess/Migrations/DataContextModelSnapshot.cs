@@ -51,7 +51,7 @@ namespace FluidCash.DataAccess.Migrations
                     b.Property<string>("DpUrl")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool?>("IsDeleted")
+                    b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -187,7 +187,7 @@ namespace FluidCash.DataAccess.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<bool?>("IsDeleted")
+                    b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -225,7 +225,7 @@ namespace FluidCash.DataAccess.Migrations
                     b.Property<string>("Detail")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool?>("IsDeleted")
+                    b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsSuccessful")
@@ -262,7 +262,7 @@ namespace FluidCash.DataAccess.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<bool?>("IsDeleted")
+                    b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<string>("Template")
@@ -286,7 +286,7 @@ namespace FluidCash.DataAccess.Migrations
                         new
                         {
                             Id = "defaultId",
-                            CreatedAt = new DateTime(2025, 3, 20, 21, 59, 22, 697, DateTimeKind.Utc).AddTicks(8112),
+                            CreatedAt = new DateTime(2025, 3, 22, 10, 34, 47, 907, DateTimeKind.Utc).AddTicks(3385),
                             CreatedBy = "Admin",
                             IsDeleted = false,
                             Template = "<!DOCTYPE html>\r\n                                        <html lang=\"en\">\r\n\r\n                                        <head>\r\n                                          <meta charset=\"UTF-8\">\r\n                                          <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n                                          <title>Email Template</title>\r\n                                          <style>\r\n                                            @import url(https://cdn.jsdelivr.net/npm/@xz/fonts@1/serve/hk-grotesk.min.css);\r\n\r\n                                            body {\r\n                                              font-size: 16px;\r\n                                              background: #f6f6f5;\r\n                                              font-family: \"HK Grotesk\", sans-serif;\r\n                                            }\r\n\r\n                                            p {\r\n                                              margin-top: 20px;\r\n                                              margin-bottom: 24px;\r\n                                              line-height: 1.5;\r\n                                              text-align: justify;\r\n                                            }\r\n\r\n                                            table {\r\n                                              width: 100%;\r\n                                            }\r\n\r\n                                            a {\r\n                                              color: #000000;\r\n                                              font-weight: 600;\r\n                                              text-decoration: none;\r\n                                            }\r\n\r\n                                            img {\r\n                                              width: 100%;\r\n                                              height: auto;\r\n                                            }\r\n\r\n                                            .wrapper {\r\n                                              width: 100%;\r\n                                              max-width: 567px;\r\n                                              margin: 32px auto;\r\n                                            }\r\n\r\n                                            .header {\r\n                                              padding: 24px 32px;\r\n                                            }\r\n\r\n                                            .content {\r\n                                              padding: 20px 32px;\r\n                                              background-color: #ffffff;\r\n                                            }\r\n\r\n                                            .footer {\r\n                                              padding: 10px 32px;\r\n                                              background-color: #000000;\r\n                                              color: #D80944;\r\n                                              font-size: 14px;\r\n                                              font-weight: 300;\r\n                                              line-height: 1.6;\r\n                                            }\r\n\r\n                                            .footer a {\r\n                                              text-decoration: none;\r\n                                              color: #D80944;\r\n                                              font-weight: 600;\r\n                                            }\r\n\r\n                                            .footer a:hover {\r\n                                              color: #D80944;\r\n                                            }\r\n\r\n                                            .footer .logo {\r\n                                              width: 150px;\r\n                                            }\r\n\r\n                                            .footer .navigation {\r\n                                              text-align: center;\r\n                                              margin-bottom: 10px;\r\n                                            }\r\n\r\n                                            .footer .navigation a {\r\n                                              display: inline-block;\r\n                                              color: #ffffff;\r\n                                              margin: 0 10px;\r\n                                            }\r\n\r\n                                            .footer .navigation a:hover {\r\n                                              color: #D80944;\r\n                                            }\r\n\r\n                                            .footer .social-icons {\r\n                                              text-align: center;\r\n                                              margin-bottom: 10px;\r\n                                            }\r\n\r\n                                            .footer .social-icons img {\r\n                                              width: 24px;\r\n                                              height: 24px;\r\n                                              margin: 0 5px;\r\n                                            }\r\n\r\n                                            .footer .social-icons a:hover img {\r\n                                              filter: invert(29%) sepia(84%) saturate(4849%) hue-rotate(340deg) brightness(95%) contrast(102%);\r\n                                            }\r\n\r\n                                            .footer .legal {\r\n                                              text-align: right;\r\n                                            }\r\n\r\n                                            .footer .legal a {\r\n                                              color: #777777;\r\n                                            }\r\n\r\n                                            .footer .legal a:hover {\r\n                                              color: #D80944;\r\n                                            }\r\n\r\n                                            .footer .contact {\r\n                                              color: #777777;\r\n                                              text-align: right;\r\n                                            }\r\n\r\n                                            .footer .contact a:hover {\r\n                                              color: #D80944;\r\n                                            }\r\n\r\n                                            .footer .separator {\r\n                                              border-top: 1px solid #dddddd;\r\n                                              margin: 10px 0;\r\n                                            }\r\n                                          </style>\r\n                                        </head>\r\n\r\n                                        <body>\r\n                                          <div class=\"wrapper\">\r\n                                            <!-- Email Header -->\r\n                                            <div class=\"header\">\r\n                                              <a href=\"{{org-url}}\">\r\n                                                <img class=\"logo\" src=\"{{logo}}\" alt=\"\" />\r\n                                              </a>\r\n                                            </div>\r\n                                            <!-- End Email Header -->\r\n\r\n                                            <!-- Email Content -->\r\n                                            <div class=\"content\">\r\n                                              <table>\r\n                                                <tr>\r\n                                                  <td>\r\n                                                    <p><strong>Hello {{recipient}},</strong></p>\r\n                                                  </td>\r\n                                                </tr>\r\n                                                <tr>\r\n                                                  <td>\r\n                                                    {{body}}\r\n                                                  </td>\r\n                                                </tr>\r\n                                              </table>\r\n                                            </div>\r\n                                            <!-- End Email Content -->\r\n\r\n                                            <!-- Email Footer -->\r\n                                            <div class=\"footer\">\r\n                                              <table>\r\n                                                <tr>\r\n                                                  <td style=\"width: 25%;\">\r\n                                                    <a href=\"{{org-url}}\">\r\n                                                      <img class=\"logo\" src=\"{{logo}}\" alt=\"Company Logo\" />\r\n                                                    </a>\r\n                                                  </td>\r\n                                                  <td style=\"width: 50%; text-align: center;\">\r\n                                                    <div class=\"navigation\">\r\n                                                      <a href=\"{{org-url}}\">About Us</a>\r\n                                                      <a href=\"{{org-url}}\">Products</a>\r\n                                                      <a href=\"{{org-url}}\">Support</a>\r\n                                                      <a href=\"{{org-url}}\">Blog</a>\r\n                                                    </div>\r\n                                                    <div class=\"social-icons\">\r\n                                                      <a href=\"{{linkedinurl}}\">\r\n                                                        <img src=\"https://cdn-icons-png.flaticon.com/512/174/174857.png\" alt=\"LinkedIn\" />\r\n                                                      </a>\r\n                                                      <a href=\"{{twitterurl}}\">\r\n                                                        <img src=\"https://cdn-icons-png.flaticon.com/512/733/733579.png\" alt=\"Twitter\" />\r\n                                                      </a>\r\n                                                    </div>\r\n                                                  </td>\r\n                                                  <td style=\"width: 25%; text-align: right;\">\r\n                                                    <div class=\"legal\">\r\n                                                      <a href=\"{{org-url}}\">Terms of Use</a>\r\n                                                      <br />\r\n                                                      <a href=\"{{org-url}}\">Privacy Policy</a>\r\n                                                    </div>\r\n                                                    <div class=\"contact\">\r\n                                                      <p>Email: <a href=\"mailto:{{sendermail}}\">{{sendermail}}</a></p>\r\n                                                    </div>\r\n                                                  </td>\r\n                                                </tr>\r\n                                                <tr>\r\n                                                  <td colspan=\"3\">\r\n                                                    <div class=\"separator\"></div>\r\n                                                    <p style=\"text-align: center; color: #777777;\">\r\n                                                      © {{year}} {{org-name}}. All Rights Reserved.\r\n                                                    </p>\r\n                                                  </td>\r\n                                                </tr>\r\n                                              </table>\r\n                                            </div>\r\n                                            <!-- End Email Footer -->\r\n                                          </div>\r\n                                        </body>\r\n\r\n                                        </html>",
@@ -311,7 +311,7 @@ namespace FluidCash.DataAccess.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<bool?>("IsDeleted")
+                    b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<string>("SubCategory")
@@ -351,7 +351,7 @@ namespace FluidCash.DataAccess.Migrations
                     b.Property<string>("GiftCardId")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<bool?>("IsDeleted")
+                    b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<decimal>("Rate")
@@ -393,7 +393,7 @@ namespace FluidCash.DataAccess.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<bool?>("IsDeleted")
+                    b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -443,7 +443,7 @@ namespace FluidCash.DataAccess.Migrations
                     b.Property<string>("GiftCardId")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<bool?>("IsDeleted")
+                    b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<string>("OtherDetails")
@@ -500,7 +500,7 @@ namespace FluidCash.DataAccess.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<bool?>("IsDeleted")
+                    b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<bool?>("IsSuccessful")
@@ -680,7 +680,7 @@ namespace FluidCash.DataAccess.Migrations
                 {
                     b.HasBaseType("Microsoft.AspNetCore.Identity.IdentityRole");
 
-                    b.Property<bool?>("IsDeleted")
+                    b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.HasDiscriminator().HasValue("AppRole");
@@ -752,7 +752,7 @@ namespace FluidCash.DataAccess.Migrations
                     b.HasOne("FluidCash.Models.WalletTransaction", "Transaction")
                         .WithOne("Trading")
                         .HasForeignKey("FluidCash.Models.WalletTrading", "TransactionId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("FluidCash.Models.Wallet", "Wallet")
                         .WithMany("Tradings")
@@ -771,7 +771,7 @@ namespace FluidCash.DataAccess.Migrations
                     b.HasOne("FluidCash.Models.Wallet", "Wallet")
                         .WithMany("Transactions")
                         .HasForeignKey("WalletId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Wallet");
                 });
