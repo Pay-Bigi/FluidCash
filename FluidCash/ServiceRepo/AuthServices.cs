@@ -58,7 +58,8 @@ public class AuthServices : IAuthServices
             if (!userCreationResult.Succeeded)
             {
                 await transaction.RollbackAsync(); // Rollback on failure
-                return StandardResponse<string>.Failed(data: null, errorMessage: "User creation failed");
+                string errorMsg = $"User creation failed.\n {userCreationResult.Errors.FirstOrDefault()}";
+                return StandardResponse<string>.Failed(data: null, errorMessage: errorMsg);
             }
 
             var userAccount = new CreateUserAccountParams
@@ -82,7 +83,8 @@ public class AuthServices : IAuthServices
             if (!accCreationSuccessful)
             {
                 await transaction.RollbackAsync(); // Rollback if account creation fails
-                return StandardResponse<string>.Failed(data: null, errorMessage: "Account creation failed");
+                string errorMsg = "An errored while attempting to create account. Kindly retry";
+                return StandardResponse<string>.Failed(data: null, errorMessage: errorMsg, statusCode: 500);
             }
 
             await transaction.CommitAsync(); // Commit transaction if all operations succeed

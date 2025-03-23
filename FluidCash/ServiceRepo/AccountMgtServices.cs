@@ -33,30 +33,32 @@ public sealed class AccountMgtServices : IAccountMgtServices
 
     public async Task<bool> CreateUserAccountAsync(CreateUserAccountParams createUserAccountDto)
     {
-        var userAccount = new Account
+        try
         {
-            DisplayName = createUserAccountDto.displayName,
-            AppUserId = createUserAccountDto.appUserId,
-            DpCloudinaryId = createUserAccountDto.dpCloudinaryId,
-            DpUrl = createUserAccountDto.dpUrl,
-            CreatedAt = DateTime.Now,
-            CreatedBy = createUserAccountDto.appUserId
-        };
+            var userAccount = new Account
+            {
+                DisplayName = createUserAccountDto.displayName,
+                AppUserId = createUserAccountDto.appUserId,
+                DpCloudinaryId = createUserAccountDto.dpCloudinaryId,
+                DpUrl = createUserAccountDto.dpUrl,
+                CreatedAt = DateTime.Now,
+                CreatedBy = createUserAccountDto.appUserId
+            };
 
-        // Create Wallet
-        var walletCreationParams = new CreateWalletParams("NGN", 0, userAccount.Id);
-        var walletId = await _walletServices.CreateWalletAsync(walletCreationParams, userAccount.AppUserId);
+            // Create Wallet
+            var walletCreationParams = new CreateWalletParams("NGN", 0, userAccount.Id);
+            var walletId = await _walletServices.CreateWalletAsync(walletCreationParams, userAccount.AppUserId);
 
-        if (walletId.Data == null)
-        {
-            throw new Exception("Wallet creation failed"); // Ensures rollback occurs
+            userAccount.WalleId = walletId.Data;
+            await _accountRepo.AddAsync(userAccount);
+            await _accountRepo.SaveChangesAsync();
+
+            return true;
         }
-
-        userAccount.WalleId = walletId.Data;
-        await _accountRepo.AddAsync(userAccount);
-        await _accountRepo.SaveChangesAsync();
-
-        return true;
+        catch (Exception ex) 
+        {
+            return false;
+        }
     }
 
     public async Task<StandardResponse<string>>
@@ -164,7 +166,7 @@ public sealed class AccountMgtServices : IAccountMgtServices
         return StandardResponse<IEnumerable<AccountResponseDto>>.Success(data: response);
     }
 
-    public async Task<StandardResponse<DashboardResponse>> 
+    public async Task<StandardResponse<DashboardResponse>>
         GetUserDashboardAsync(string userId)
     {
         // Fetch account with includes asynchronously
@@ -234,9 +236,9 @@ public sealed class AccountMgtServices : IAccountMgtServices
         InitiateWithdrawalAsync
         (InitiateWithdrawalParams withdrawalParams, string userId)
     {
-        var account = _accountRepo.GetNonDeletedByCondition(x=>x.Id == withdrawalParams.accountId)
-            .Include(acc=>acc.AppUser)
-            .Include(acc=>acc.Wallet)
+        var account = _accountRepo.GetNonDeletedByCondition(x => x.Id == withdrawalParams.accountId)
+            .Include(acc => acc.AppUser)
+            .Include(acc => acc.Wallet)
             .FirstOrDefault();
 
         bool? is2FaEnabled = account?.AppUser?.TwoFactorEnabled;
@@ -347,7 +349,7 @@ public sealed class AccountMgtServices : IAccountMgtServices
         }
         await _cloudinaryServices.DeleteFileFromCloudinaryAsync(account.DpCloudinaryId);
         var uploadResp = await _cloudinaryServices.UploadFileToCloudinaryAsync(uploadDpParams.dp);
-        if(!uploadResp.Succeeded)
+        if (!uploadResp.Succeeded)
         {
             string? errorMsg = "Failed to upload dp";
             return StandardResponse<string>.Failed(data: null, errorMsg);
