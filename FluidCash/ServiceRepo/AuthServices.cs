@@ -36,6 +36,12 @@ public class AuthServices : IAuthServices
     public async Task<StandardResponse<string>>
         CreateAccountAsync(CreateAccountParams createAccountDto)
     {
+        bool userExists = await _userManager.FindByEmailAsync(createAccountDto.userEmail) is not null;
+        if (userExists)
+        {
+            string errorMsg = "User already exists";
+            return StandardResponse<string>.Failed(data: null, errorMessage: errorMsg);
+        }
         var appUser = new AppUser
         {
             Email = createAccountDto.userEmail,
