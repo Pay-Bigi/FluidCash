@@ -13,6 +13,7 @@ namespace FluidCash.ServiceRepo;
 public class AuthServices : IAuthServices
 {
     private readonly IAccountMgtServices _accountMgtServices;
+    private readonly IBaseRepo<AppUser> _appUserRepo;
     private readonly ICloudinaryServices _cloudinaryServices;
     private readonly UserManager<AppUser> _userManager;
     private readonly ITokenService _tokenService;
@@ -23,7 +24,7 @@ public class AuthServices : IAuthServices
 
     public AuthServices(IAccountMgtServices accountMgtServices, ICloudinaryServices cloudinaryServices,
         UserManager<AppUser> userManager, ITokenService tokenService, IRedisCacheService redisCacheService,
-        IEmailSender emailSender)
+        IEmailSender emailSender, IBaseRepo<AppUser> appUserRepo)
     {
         _accountMgtServices = accountMgtServices;
         _cloudinaryServices = cloudinaryServices;
@@ -31,42 +32,74 @@ public class AuthServices : IAuthServices
         _tokenService = tokenService;
         _redisCacheService = redisCacheService;
         _emailSender = emailSender;
+        _appUserRepo = appUserRepo;
     }
 
-    public async Task<StandardResponse<string>>
-        CreateAccountAsync(CreateAccountParams createAccountDto)
+    public async Task<StandardResponse<string>> CreateAccountAsync(CreateAccountParams createAccountDto)
     {
-        var appUser = new AppUser
+        bool userExists = await _userManager.FindByEmailAsync(createAccountDto.userEmail) is not null;
+        if (userExists)
         {
-            Email = createAccountDto.userEmail,
-            UserName = createAccountDto.userEmail
-        };
-        var userAccount = new CreateUserAccountParams
-        {
-            displayName = createAccountDto.displayName,
-            appUserId = appUser.Id
-        };
-        if (createAccountDto.dpImage is not null)
-        {
-            var imageFile = createAccountDto.dpImage;
-            var imageUploadDetails = await _cloudinaryServices.UploadFileToCloudinaryAsync(imageFile);
-            if (imageUploadDetails.Succeeded)
-            {
-                userAccount.dpUrl = imageUploadDetails.Data.fileUrlPath;
-                userAccount.dpCloudinaryId = imageUploadDetails.Data.filePublicId;
-            }
-        }
-        await _userManager.CreateAsync(appUser, createAccountDto.password);
-        var accCreationSuccessful = await _accountMgtServices.CreateUserAccountAsync(userAccount);
-        if (!accCreationSuccessful)
-        {
-            string errorMsg = "Account creation failed";
+            string errorMsg = "User already exists";
             return StandardResponse<string>.Failed(data: null, errorMessage: errorMsg);
         }
 
-        string? successMsg = "Account successfully created. Proceed to login";
-        return StandardResponse<string>.Success(successMsg, statusCode: 201);
+        using var transaction = await _appUserRepo.BeginTransactionAsync(); // Start transaction
+
+        try
+        {
+            var appUser = new AppUser
+            {
+                Email = createAccountDto.userEmail,
+                UserName = createAccountDto.userEmail
+            };
+
+            var userCreationResult = await _userManager.CreateAsync(appUser, createAccountDto.password);
+            if (!userCreationResult.Succeeded)
+            {
+                await transaction.RollbackAsync(); // Rollback on failure
+                string errorMsg = $"User creation failed.\n {userCreationResult.Errors.FirstOrDefault()}";
+                return StandardResponse<string>.Failed(data: null, errorMessage: errorMsg);
+            }
+
+            var userAccount = new CreateUserAccountParams
+            {
+                displayName = createAccountDto.displayName,
+                appUserId = appUser.Id
+            };
+
+            // Handle Profile Picture Upload
+            if (createAccountDto.dpImage is not null)
+            {
+                var imageUploadDetails = await _cloudinaryServices.UploadFileToCloudinaryAsync(createAccountDto.dpImage);
+                if (imageUploadDetails.Succeeded)
+                {
+                    userAccount.dpUrl = imageUploadDetails.Data.fileUrlPath;
+                    userAccount.dpCloudinaryId = imageUploadDetails.Data.filePublicId;
+                }
+            }
+
+            var accCreationSuccessful = await _accountMgtServices.CreateUserAccountAsync(userAccount);
+            if (!accCreationSuccessful)
+            {
+                await transaction.RollbackAsync(); // Rollback if account creation fails
+                string errorMsg = "An errored while attempting to create account. Kindly retry";
+                return StandardResponse<string>.Failed(data: null, errorMessage: errorMsg, statusCode: 500);
+            }
+
+            await transaction.CommitAsync(); // Commit transaction if all operations succeed
+
+            string successMsg = "Account successfully created. Proceed to login";
+            return StandardResponse<string>.Success(successMsg, statusCode: 201);
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync(); // Rollback transaction on exception
+            string? errorMsg = "An error occurred: " + ex.Message;
+            return StandardResponse<string>.Failed(data: null, errorMessage: errorMsg);
+        }
     }
+
 
     public async Task<StandardResponse<string>>
         LoginAsync(LoginParams loginDto)

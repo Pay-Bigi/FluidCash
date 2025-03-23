@@ -1,9 +1,11 @@
-﻿using System.Linq.Expressions;
+﻿using Microsoft.EntityFrameworkCore.Storage;
+using System.Linq.Expressions;
 
 namespace FluidCash.DataAccess.Repo;
 
 public interface IBaseRepo<T> where T : class
 {
+    Task<IDbContextTransaction> BeginTransactionAsync();
     Task<bool> ExistsByConditionAsync(Expression<Func<T, bool>> condition);
     IQueryable<T> GetAll();
     IQueryable<T> GetByCondition (Expression<Func<T, bool>> conditionExpression);
