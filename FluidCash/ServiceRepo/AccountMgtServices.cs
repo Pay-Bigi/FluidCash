@@ -31,38 +31,32 @@ public sealed class AccountMgtServices : IAccountMgtServices
     }
 
 
-    public async Task<bool>
-        CreateUserAccountAsync
-        (CreateUserAccountParams createUserAccountDto)
+    public async Task<bool> CreateUserAccountAsync(CreateUserAccountParams createUserAccountDto)
     {
-        try
+        var userAccount = new Account
         {
-            var userAccount = new Account
-            {
-                DisplayName = createUserAccountDto.displayName,
-                AppUserId = createUserAccountDto.appUserId,
-                DpCloudinaryId = createUserAccountDto.dpCloudinaryId,
-                DpUrl = createUserAccountDto.dpUrl,
-                CreatedAt = DateTime.Now,
-                CreatedBy = createUserAccountDto.appUserId
-            };
-            //Create Account Wallet
-            var walletCreationParams = new CreateWalletParams
-            (
-                currency: "NGN",
-                balance: 0,
-                accountId: userAccount.Id
-            );
-            var walletId = await _walletServices.CreateWalletAsync(walletCreationParams, userAccount.AppUserId);
-            userAccount.WalleId = walletId.Data;
-            await _accountRepo.AddAsync(userAccount);
-            await _accountRepo.SaveChangesAsync();
-            return true;
-        }
-        catch (Exception ex)
+            DisplayName = createUserAccountDto.displayName,
+            AppUserId = createUserAccountDto.appUserId,
+            DpCloudinaryId = createUserAccountDto.dpCloudinaryId,
+            DpUrl = createUserAccountDto.dpUrl,
+            CreatedAt = DateTime.Now,
+            CreatedBy = createUserAccountDto.appUserId
+        };
+
+        // Create Wallet
+        var walletCreationParams = new CreateWalletParams("NGN", 0, userAccount.Id);
+        var walletId = await _walletServices.CreateWalletAsync(walletCreationParams, userAccount.AppUserId);
+
+        if (walletId.Data == null)
         {
-            return false;
+            throw new Exception("Wallet creation failed"); // Ensures rollback occurs
         }
+
+        userAccount.WalleId = walletId.Data;
+        await _accountRepo.AddAsync(userAccount);
+        await _accountRepo.SaveChangesAsync();
+
+        return true;
     }
 
     public async Task<StandardResponse<string>>

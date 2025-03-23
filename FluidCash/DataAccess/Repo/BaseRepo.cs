@@ -1,6 +1,7 @@
 ﻿using FluidCash.DataAccess.DbContext;
 using FluidCash.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using System.Linq.Expressions;
 namespace FluidCash.DataAccess.Repo;
 
@@ -98,6 +99,12 @@ public sealed class BaseRepo<T> : IBaseRepo<T> where T : class, IBaseEntity
         {
             entity.IsDeleted = true;
         }
+    }
+
+    public async Task<IDbContextTransaction> 
+        BeginTransactionAsync()
+    {
+        return await _dataContext.Database.BeginTransactionAsync();
     }
 
     public async Task SaveChangesAsync()

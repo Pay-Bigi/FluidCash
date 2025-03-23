@@ -13,6 +13,7 @@ namespace FluidCash.ServiceRepo;
 public class AuthServices : IAuthServices
 {
     private readonly IAccountMgtServices _accountMgtServices;
+    private readonly IBaseRepo<AppUser> _appUserRepo;
     private readonly ICloudinaryServices _cloudinaryServices;
     private readonly UserManager<AppUser> _userManager;
     private readonly ITokenService _tokenService;
@@ -23,7 +24,7 @@ public class AuthServices : IAuthServices
 
     public AuthServices(IAccountMgtServices accountMgtServices, ICloudinaryServices cloudinaryServices,
         UserManager<AppUser> userManager, ITokenService tokenService, IRedisCacheService redisCacheService,
-        IEmailSender emailSender)
+        IEmailSender emailSender, IBaseRepo<AppUser> appUserRepo)
     {
         _accountMgtServices = accountMgtServices;
         _cloudinaryServices = cloudinaryServices;
@@ -31,10 +32,10 @@ public class AuthServices : IAuthServices
         _tokenService = tokenService;
         _redisCacheService = redisCacheService;
         _emailSender = emailSender;
+        _appUserRepo = appUserRepo;
     }
 
-    public async Task<StandardResponse<string>>
-        CreateAccountAsync(CreateAccountParams createAccountDto)
+    public async Task<StandardResponse<string>> CreateAccountAsync(CreateAccountParams createAccountDto)
     {
         bool userExists = await _userManager.FindByEmailAsync(createAccountDto.userEmail) is not null;
         if (userExists)
@@ -42,37 +43,61 @@ public class AuthServices : IAuthServices
             string errorMsg = "User already exists";
             return StandardResponse<string>.Failed(data: null, errorMessage: errorMsg);
         }
-        var appUser = new AppUser
+
+        using var transaction = await _appUserRepo.BeginTransactionAsync(); // Start transaction
+
+        try
         {
-            Email = createAccountDto.userEmail,
-            UserName = createAccountDto.userEmail
-        };
-        var userAccount = new CreateUserAccountParams
-        {
-            displayName = createAccountDto.displayName,
-            appUserId = appUser.Id
-        };
-        if (createAccountDto.dpImage is not null)
-        {
-            var imageFile = createAccountDto.dpImage;
-            var imageUploadDetails = await _cloudinaryServices.UploadFileToCloudinaryAsync(imageFile);
-            if (imageUploadDetails.Succeeded)
+            var appUser = new AppUser
             {
-                userAccount.dpUrl = imageUploadDetails.Data.fileUrlPath;
-                userAccount.dpCloudinaryId = imageUploadDetails.Data.filePublicId;
+                Email = createAccountDto.userEmail,
+                UserName = createAccountDto.userEmail
+            };
+
+            var userCreationResult = await _userManager.CreateAsync(appUser, createAccountDto.password);
+            if (!userCreationResult.Succeeded)
+            {
+                await transaction.RollbackAsync(); // Rollback on failure
+                return StandardResponse<string>.Failed(data: null, errorMessage: "User creation failed");
             }
+
+            var userAccount = new CreateUserAccountParams
+            {
+                displayName = createAccountDto.displayName,
+                appUserId = appUser.Id
+            };
+
+            // Handle Profile Picture Upload
+            if (createAccountDto.dpImage is not null)
+            {
+                var imageUploadDetails = await _cloudinaryServices.UploadFileToCloudinaryAsync(createAccountDto.dpImage);
+                if (imageUploadDetails.Succeeded)
+                {
+                    userAccount.dpUrl = imageUploadDetails.Data.fileUrlPath;
+                    userAccount.dpCloudinaryId = imageUploadDetails.Data.filePublicId;
+                }
+            }
+
+            var accCreationSuccessful = await _accountMgtServices.CreateUserAccountAsync(userAccount);
+            if (!accCreationSuccessful)
+            {
+                await transaction.RollbackAsync(); // Rollback if account creation fails
+                return StandardResponse<string>.Failed(data: null, errorMessage: "Account creation failed");
+            }
+
+            await transaction.CommitAsync(); // Commit transaction if all operations succeed
+
+            string successMsg = "Account successfully created. Proceed to login";
+            return StandardResponse<string>.Success(successMsg, statusCode: 201);
         }
-        await _userManager.CreateAsync(appUser, createAccountDto.password);
-        var accCreationSuccessful = await _accountMgtServices.CreateUserAccountAsync(userAccount);
-        if (!accCreationSuccessful)
+        catch (Exception ex)
         {
-            string errorMsg = "Account creation failed";
+            await transaction.RollbackAsync(); // Rollback transaction on exception
+            string? errorMsg = "An error occurred: " + ex.Message;
             return StandardResponse<string>.Failed(data: null, errorMessage: errorMsg);
         }
-
-        string? successMsg = "Account successfully created. Proceed to login";
-        return StandardResponse<string>.Success(successMsg, statusCode: 201);
     }
+
 
     public async Task<StandardResponse<string>>
         LoginAsync(LoginParams loginDto)
