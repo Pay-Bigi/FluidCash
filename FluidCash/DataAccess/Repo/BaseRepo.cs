@@ -9,6 +9,7 @@ public sealed class BaseRepo<T> : IBaseRepo<T> where T : class, IBaseEntity
 {
     private readonly DataContext _dataContext;
     private readonly DbSet<T> _dbSet;
+    private IDbContextTransaction? _currentTransaction;
 
     public BaseRepo(DataContext dataContext)
     {
@@ -100,10 +101,29 @@ public sealed class BaseRepo<T> : IBaseRepo<T> where T : class, IBaseEntity
         }
     }
 
-    public async Task<IDbContextTransaction> 
-        BeginTransactionAsync()
+    public async Task BeginTransactionAsync()
     {
-        return await _dataContext.Database.BeginTransactionAsync();
+        _currentTransaction = await _dataContext.Database.BeginTransactionAsync();
+    }
+
+    public async Task CommitTransactionAsync()
+    {
+        if (_currentTransaction != null)
+        {
+            await _currentTransaction.CommitAsync();
+            await _currentTransaction.DisposeAsync();
+            _currentTransaction = null;
+        }
+    }
+
+    public async Task RollbackTransactionAsync()
+    {
+        if (_currentTransaction != null)
+        {
+            await _currentTransaction.RollbackAsync();
+            await _currentTransaction.DisposeAsync();
+            _currentTransaction = null;
+        }
     }
 
     public async Task SaveChangesAsync()
