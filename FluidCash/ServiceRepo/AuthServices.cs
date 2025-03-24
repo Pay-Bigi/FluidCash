@@ -1,4 +1,5 @@
-﻿using FluidCash.DataAccess.Repo;
+﻿using FluidCash.DataAccess.DbContext;
+using FluidCash.DataAccess.Repo;
 using FluidCash.Helpers.ObjectFormatters.DTOs.Requests;
 using FluidCash.Helpers.ObjectFormatters.ObjectWrapper;
 using FluidCash.IExternalServicesRepo;
@@ -13,7 +14,7 @@ namespace FluidCash.ServiceRepo;
 public class AuthServices : IAuthServices
 {
     private readonly IAccountMgtServices _accountMgtServices;
-    private readonly IBaseRepo<AppUser> _appUserRepo;
+    private readonly DataContext _dataContext;
     private readonly ICloudinaryServices _cloudinaryServices;
     private readonly UserManager<AppUser> _userManager;
     private readonly ITokenService _tokenService;
@@ -24,7 +25,7 @@ public class AuthServices : IAuthServices
 
     public AuthServices(IAccountMgtServices accountMgtServices, ICloudinaryServices cloudinaryServices,
         UserManager<AppUser> userManager, ITokenService tokenService, IRedisCacheService redisCacheService,
-        IEmailSender emailSender, IBaseRepo<AppUser> appUserRepo)
+        IEmailSender emailSender, DataContext dataContext)
     {
         _accountMgtServices = accountMgtServices;
         _cloudinaryServices = cloudinaryServices;
@@ -32,7 +33,7 @@ public class AuthServices : IAuthServices
         _tokenService = tokenService;
         _redisCacheService = redisCacheService;
         _emailSender = emailSender;
-        _appUserRepo = appUserRepo;
+        _dataContext = dataContext;
     }
 
     public async Task<StandardResponse<string>> CreateAccountAsync(CreateAccountParams createAccountDto)
@@ -44,7 +45,7 @@ public class AuthServices : IAuthServices
             return StandardResponse<string>.Failed(data: null, errorMessage: errorMsg);
         }
 
-        using var transaction = await _appUserRepo.BeginTransactionAsync(); // Start transaction
+        using var transaction =  await _dataContext.Database.BeginTransactionAsync(); // Start transaction
 
         try
         {
