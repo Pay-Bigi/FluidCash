@@ -24,6 +24,18 @@ public class GiftCardServices : IGiftCardServices
         CreateGiftCardAndRateAsync
         (CreateGiftCardAndRateParams createGiftCardAndRateDto, string? userId)
     {
+        string? lowerCategory = createGiftCardAndRateDto.category.ToLower();
+        string? lowerSubCategory = createGiftCardAndRateDto.subCategory.ToLower();
+        bool cardExists = await _giftCardRepo.ExistsByConditionAsync
+            (crd => 
+                crd.Category.ToLower() == lowerCategory && 
+                crd.SubCategory.ToLower() == lowerSubCategory
+            );
+        if (cardExists)
+        {
+            string? errorMsg = "Not created. Card with category and sub category already exists";
+            return StandardResponse<string>.Failed(data: null, errorMsg);
+        }
         var giftCard = new GiftCard
         {
             Category = createGiftCardAndRateDto.category,
@@ -123,7 +135,7 @@ public class GiftCardServices : IGiftCardServices
                     y.CountryCode,
                     y.Currency,
                     y.Rate,
-                    getGiftCardDto.giftCardId,
+                    x.Id,
                     y.Id
                 ))
             ))
@@ -151,7 +163,7 @@ public class GiftCardServices : IGiftCardServices
                     y.CountryCode,
                     y.Currency,
                     y.Rate,
-                    cardId,
+                    x.Id,
                     y.Id
                 )):null
             ))
@@ -173,7 +185,7 @@ public class GiftCardServices : IGiftCardServices
     }
 
     public async Task<StandardResponse<IEnumerable<GiftCardRateResponseDto>>> 
-        GetGiftCardRateAsync
+        GetGiftCardRatesAsync
         (GetGiftCardRateFilterParams getGiftCardRateDto)
     {// Base query: Get non-deleted gift cards by ID
         string? cardRateId = getGiftCardRateDto.giftCardRateId;
@@ -213,7 +225,7 @@ public class GiftCardServices : IGiftCardServices
                     x.CountryCode,
                     x.Currency,
                     x.Rate,
-                    getGiftCardRateDto.giftCardId,
+                    x.GiftCardId,
                     x.Id
                 )
             ).ToListAsync();

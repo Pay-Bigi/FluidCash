@@ -347,7 +347,10 @@ public sealed class AccountMgtServices : IAccountMgtServices
             string? errorMessage = "Account not found";
             return StandardResponse<string>.Failed(data: null, errorMessage);
         }
-        await _cloudinaryServices.DeleteFileFromCloudinaryAsync(account.DpCloudinaryId);
+        if(!string.IsNullOrWhiteSpace(account.DpCloudinaryId))
+        {
+            await _cloudinaryServices.DeleteFileFromCloudinaryAsync(account.DpCloudinaryId);
+        }
         var uploadResp = await _cloudinaryServices.UploadFileToCloudinaryAsync(uploadDpParams.dp);
         if (!uploadResp.Succeeded)
         {

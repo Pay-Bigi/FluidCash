@@ -21,5 +21,5 @@ public record ResolveAccountParams
 public record InitializePaymentParams
 (
     string clientMail,
-    int amount
+    decimal? amount
 );
