@@ -36,7 +36,7 @@ public class AuthController:V1BaseController
     [AllowAnonymous]
     [HttpPost("reset-password")]
     public async Task<IActionResult> ResetPasswordAsync
-        ([FromBody] string userEmail)
+        ([FromForm] string userEmail)
     {
         var response = await _authServices.ResetPasswordAsync(userEmail);
         return StatusCode(response.StatusCode, response);
@@ -70,7 +70,7 @@ public class AuthController:V1BaseController
 
     [HttpPost("verify-transaction-password")]
     public async Task<IActionResult> VerifyTransactionPasswordAsync
-        (string? transactionPassword)
+        ([FromForm]string? transactionPassword)
     {
         string? userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var response = await _authServices.VerifyTransactionPasswordAsync(transactionPassword, userId);
