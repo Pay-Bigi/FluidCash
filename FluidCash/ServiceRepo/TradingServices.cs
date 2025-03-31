@@ -129,7 +129,6 @@ public sealed class TradingServices : ITradingServices
         return StandardResponse<string>.Success(successMessage);
     }
 
-    //Correction Included
     public async Task<StandardResponse<WalletTradingResponse>>
         BuyGiftCardAsync
         (BuyGiftCardParams buyGiftCardDto, string userId)
@@ -173,11 +172,7 @@ public sealed class TradingServices : ITradingServices
                 }
                 else
                 {
-                    //Update to user mail
-
-                    string? userMail = string.Empty;
-                    int exchangeAmount = Convert.ToInt16(exchangeValue);
-                    var transactionInitiationParams = new InitializePaymentParams(userMail, exchangeAmount);
+                    var transactionInitiationParams = new InitializePaymentParams(buyGiftCardDto.transactionEmail, exchangeValue);
                     var initiateTransactionResponse = _paystackServices.InitiateTransaction(transactionInitiationParams);
                     if (initiateTransactionResponse.Succeeded)
                     {

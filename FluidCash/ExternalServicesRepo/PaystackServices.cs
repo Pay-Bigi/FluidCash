@@ -52,12 +52,18 @@ public sealed class PaystackServices : IPaystackServices
         var payStackResponse = _payStackServices.Transactions.Initialize
             (
                 email: initializePaymentParams.clientMail,
-                amountInKobo: initializePaymentParams.amount,
+                amountInKobo: (int)(initializePaymentParams.amount*100),
                 reference: transactionRef, makeReferenceUnique: false);
+
+        var errorMsg = $"Failed to initialize transactiuon at the moment. Provider details: {payStackResponse.Message}";
+
+        if (payStackResponse.Status != true)
+        {
+            return StandardResponse<InitiateTransactionResponse>.Failed(null, errorMsg);
+        }
 
         if (string.IsNullOrWhiteSpace(payStackResponse.Data.AuthorizationUrl))
         {
-            var errorMsg = "Failed to initialize transactiuon at the moment. Kindly retry";
             return StandardResponse<InitiateTransactionResponse>.Failed(data: null, errorMessage: errorMsg, statusCode: 500);
         }
         var transactionAuthUrl = payStackResponse.Data.AuthorizationUrl;
