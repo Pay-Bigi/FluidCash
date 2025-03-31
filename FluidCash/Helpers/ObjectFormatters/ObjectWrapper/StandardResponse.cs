@@ -22,7 +22,7 @@ public class StandardResponse<T>
     }
 
     /// <summary>
-    /// Application custom response message, 404 response means Not Found
+    /// Application custom response message, 400 response means User Error
     /// </summary>
     /// <param name="errorMessage"></param>
     /// <param name="statusCode"></param>
@@ -33,7 +33,7 @@ public class StandardResponse<T>
     }
 
     /// <summary>
-    /// Application custom response message, 00 means successful
+    /// Application custom response message, 200 means successful
     /// </summary>
     /// <param name="successMessage"></param>
     /// <param name="data"></param>
@@ -51,19 +51,19 @@ public class StandardResponse<T>
     /// <param name="data"></param>
     /// <param name="statusCode"></param>
     /// <returns></returns>
-    public static StandardResponse<T> Pending(T? data, string? message = "pending_process", int statusCode = 202)
+    public static StandardResponse<T> Pending(T? data, string? message = "Accepted", int statusCode = 202)
     {
         return new StandardResponse<T> { Succeeded = true, Message = message, Data = data, StatusCode = statusCode };
     }
 
     /// <summary>
-    /// Application custom response message, 503 means server error
+    /// Application custom response message, 503 means Service Unavailable
     /// </summary>
     /// <param name="message"></param>
     /// <param name="data"></param>
     /// <param name="statusCode"></param>
     /// <returns></returns>
-    public static StandardResponse<T> UnExpectedError(T? data, string? message = "Internal server error", int statusCode = 503)
+    public static StandardResponse<T> UnExpectedError(T? data, string? message = "Service currently unavailable", int statusCode = 503)
     {
         return new StandardResponse<T> { Succeeded = false, Message = message, Data = data, StatusCode = statusCode };
     }
