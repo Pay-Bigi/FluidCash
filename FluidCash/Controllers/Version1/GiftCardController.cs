@@ -52,7 +52,7 @@ public class GiftCardController:V1BaseController
         return StatusCode(result.StatusCode, result);
     }
 
-    [HttpPut("update-giftcard")]
+    [HttpPut("update-giftcard-rate")]
     public async Task<IActionResult> UpdateGiftCardRateAsync([FromBody] UpdateGiftCardRateParams updateGiftCardRateParams)
     {
         string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
