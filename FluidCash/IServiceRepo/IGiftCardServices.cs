@@ -31,7 +31,7 @@ public interface IGiftCardServices
         UpdateGiftCardRateAsync(UpdateGiftCardRateParams updateGiftCardDto, string? userId);
 
     Task<StandardResponse<IEnumerable<GiftCardRateResponseDto>>>
-        GetGiftCardRateAsync(GetGiftCardRateFilterParams getGiftCardDto);
+        GetGiftCardRatesAsync(GetGiftCardRateFilterParams getGiftCardDto);
 
     Task<StandardResponse<string>>
         DeleteGiftCardRateAsync(string giftCardRateId, string? userId);

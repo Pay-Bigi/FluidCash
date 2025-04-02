@@ -49,7 +49,7 @@ public class AccountMgtController:V1BaseController
 
     [HttpPost("upload-user-dp")]
     public async Task<IActionResult> UploadDpAsync
-        ([FromBody] UploadDpParams uploadDpParams)
+        ([FromForm] UploadDpParams uploadDpParams)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var response = await _accountMgtServices.UploadDpAsync(uploadDpParams, userId);
