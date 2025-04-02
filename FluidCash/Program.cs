@@ -16,6 +16,7 @@ builder.Services.RegisterContainerServices();
 builder.Services.ConfigureRedisCache();
 builder.Services.ConfigureEmailService(builder.Configuration);
 builder.Services.ConfigurePayStackServices();
+builder.Services.ConfigureFlutterWave();
 builder.Services.ConfigureCloudinary(builder.Configuration);
 builder.Services.ConfigureAuthServices(builder.Configuration);
 

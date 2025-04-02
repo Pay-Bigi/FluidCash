@@ -210,7 +210,6 @@ public static class ServiceExtension
         services.AddScoped<IRedisCacheService, RedisCacheService>();
     }
 
-
     public static void
         ConfigureEmailService
         (this IServiceCollection services, IConfigurationBuilder configurationBuilder)
@@ -295,6 +294,20 @@ public static class ServiceExtension
     }
 
 
+    public static void
+       ConfigureFlutterWave
+       (this IServiceCollection services)
+    {
+        services.AddHttpClient("flutter", (serviceProvider, client) =>
+        {
+            client.DefaultRequestHeaders.Add("accept", "application/json"); 
+            client.DefaultRequestHeaders.Add("Authentication", $"Bearer {Environment.GetEnvironmentVariable("FlutterWaveKey")}");
+            client.DefaultRequestHeaders.Add("Content-Type", "Appication/Json"); 
+            client.DefaultRequestHeaders.Add("Terminalid", "3pbl0001"); ;
+            string notificationsBaseUrl = "https://qa.interswitchng.com/quicktellerservice/api/v5/";
+            client.BaseAddress = new Uri(notificationsBaseUrl);
+        });
+    }
 
     //public static void
     //   ConfigureHangfire
