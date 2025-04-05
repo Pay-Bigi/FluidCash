@@ -1,5 +1,7 @@
 ﻿using FluidCash.Helpers.ObjectFormatters.DTOs.Requests;
+using FluidCash.IExternalServicesRepo;
 using FluidCash.IServiceRepo;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -8,10 +10,12 @@ namespace FluidCash.Controllers.Version1;
 public class TradingsController:V1BaseController
 {
     private readonly ITradingServices _tradingServices;
+    private readonly IFlutterWaveServices _flutterWaveServices;
 
-    public TradingsController(ITradingServices tradingServices)
+    public TradingsController(ITradingServices tradingServices, IFlutterWaveServices flutterWaveServices)
     {
         _tradingServices = tradingServices;
+        _flutterWaveServices = flutterWaveServices;
     }
 
     [HttpPost("buy-giftcard")]
@@ -68,5 +72,13 @@ public class TradingsController:V1BaseController
         string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var result = await _tradingServices.DeleteTradeAync(tradeId, userId);
         return StatusCode(result.StatusCode, result);
+    }
+
+    [AllowAnonymous]
+    [HttpGet("test")]
+    public async Task<IActionResult> TestsAync()
+    {
+        var response = await _flutterWaveServices.CreateAuthTokenAsync();
+        return Ok(response);
     }
 }

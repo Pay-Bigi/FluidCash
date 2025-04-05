@@ -292,31 +292,29 @@ public static class ServiceExtension
 
     }
 
-
     public static void
-       ConfigureFlutterWave
-       (this IServiceCollection services)
+   ConfigureFlutterWave
+   (this IServiceCollection services)
     {
-        services.AddHttpClient("flutter", (serviceProvider, client) =>
+        services.AddHttpClient("flutterAuth", (serviceProvider, client) =>
         {
-            client.DefaultRequestHeaders.Add("accept", "application/json"); 
-            client.DefaultRequestHeaders.Add("Authentication", $"Bearer {Environment.GetEnvironmentVariable("FlutterWaveKey")}");
-            client.DefaultRequestHeaders.Add("Content-Type", "Appication/Json"); 
-            client.DefaultRequestHeaders.Add("Terminalid", "3pbl0001"); ;
-            string notificationsBaseUrl = "https://qa.interswitchng.com/quicktellerservice/api/v5/";
-            client.BaseAddress = new Uri(notificationsBaseUrl);
+            string clientId = Environment.GetEnvironmentVariable("flutterClientId")!;
+            string secretKey = Environment.GetEnvironmentVariable("flutterSecretKey")!;
+            string concatenatedString = clientId + ":" + secretKey;
+            var encodedString = Convert.ToBase64String(Encoding.UTF8.GetBytes(concatenatedString));
+            client.DefaultRequestHeaders.Add("accept", "application/json");
+            client.DefaultRequestHeaders.Add("Authorization", $"Basic {encodedString}");
+            client.DefaultRequestHeaders.Add("grant_type", "client_credentials"); 
+            string authBaseUrl = "https://passport.k8.isw.la/passport/oauth/token?grant_type=client_credentials";
+            client.BaseAddress = new Uri(authBaseUrl);
         });
-    }
+        services.AddHttpClient("flutterServices", (serviceProvider, client) =>
+            {
+                client.DefaultRequestHeaders.Add("accept", "application/json");
+                string serviesBaseUrl = "https://qa.interswitchng.com/quicktellerservice/api/v5/";
+                client.BaseAddress = new Uri(serviesBaseUrl);
+            });
 
-    //public static void
-    //   ConfigureHangfire
-    //   (this IServiceCollection services)
-    //{
-    //    string connectionString = Environment.GetEnvironmentVariable("PayBigiDB");
-    //    services.AddHangfire(config => config
-    //        .UseSimpleAssemblyNameTypeSerializer()
-    //        .UseRecommendedSerializerSettings()
-    //        .UseSqlServerStorage(connectionString));
-    //    services.AddHangfireServer();
-    //}
+        services.AddScoped<IFlutterWaveServices, FlutterWaveServices>();
+    }
 }
