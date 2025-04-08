@@ -78,7 +78,7 @@ public class TradingsController:V1BaseController
     [HttpGet("test")]
     public async Task<IActionResult> TestsAync()
     {
-        var response = await _flutterWaveServices.CreateAuthTokenAsync();
+        var response = await _flutterWaveServices.RechargeAirtimeAsync(null, null, null);
         return Ok(response);
     }
 }

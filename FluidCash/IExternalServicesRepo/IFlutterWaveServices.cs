@@ -1,6 +1,8 @@
-﻿namespace FluidCash.IExternalServicesRepo;
+﻿using FluidCash.Helpers.ObjectFormatters.ObjectWrapper;
+
+namespace FluidCash.IExternalServicesRepo;
 
 public interface IFlutterWaveServices
 {
-    Task<bool> CreateAuthTokenAsync();
+    Task<StandardResponse<string>> RechargeAirtimeAsync(string? phoneNumber, string? amount, string? network);
 }

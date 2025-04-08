@@ -311,7 +311,7 @@ public static class ServiceExtension
         services.AddHttpClient("flutterServices", (serviceProvider, client) =>
             {
                 client.DefaultRequestHeaders.Add("accept", "application/json");
-                string serviesBaseUrl = "https://qa.interswitchng.com/quicktellerservice/api/v5/";
+                string serviesBaseUrl = "https://qa.interswitchng.com/quicktellerservice/api/v5";
                 client.BaseAddress = new Uri(serviesBaseUrl);
             });
 

@@ -48,4 +48,7 @@ public class InterswitchAuthResponse
 
     [JsonPropertyName("jti")]
     public string? Jti { get; set; }
+
+    [JsonPropertyName("terminalId")]
+    public string? TerminalId { get; set; }
 }
