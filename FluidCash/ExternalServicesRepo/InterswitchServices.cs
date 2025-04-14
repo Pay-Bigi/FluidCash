@@ -6,27 +6,27 @@ using System.Net.Http.Headers;
 
 namespace FluidCash.ExternalServicesRepo;
 
-public sealed class FlutterWaveServices: IFlutterWaveServices
+public sealed class InterswitchServices: IInterswitchServices
 {
-    private readonly HttpClient _flutterAuthHttpClient;
-    private readonly HttpClient _flutterServicesHttpClient;
+    private readonly HttpClient _interswitchAuthHttpClient;
+    private readonly HttpClient _interswitchServicesHttpClient;
 
     private string? accessToken = string.Empty;
     private string? terminalId = string.Empty;
 
-    public FlutterWaveServices(IHttpClientFactory httpClientFactory)
+    public InterswitchServices(IHttpClientFactory httpClientFactory)
     {
-        _flutterAuthHttpClient = httpClientFactory.CreateClient("flutterAuth");
-        _flutterServicesHttpClient = httpClientFactory.CreateClient("flutterServices");
+        _interswitchAuthHttpClient = httpClientFactory.CreateClient("interswitchAuth");
+        _interswitchServicesHttpClient = httpClientFactory.CreateClient("interswitchServices");
     }
 
     public async Task<StandardResponse<string>>
         RechargeAirtimeAsync(string? phoneNumber, string? amount, string? network)
     { 
         if (string.IsNullOrWhiteSpace(accessToken))  await CreateAuthTokenAsync();
-        _flutterServicesHttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        _interswitchServicesHttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
-        var flutterResponse = await _flutterServicesHttpClient.GetAsync("/services");
+        var flutterResponse = await _interswitchServicesHttpClient.GetAsync("/services");
         //var content = await flutterResponse.Content.ReadAsStringAsync();
 
         //if (!flutterResponse.IsSuccessStatusCode)
@@ -39,7 +39,7 @@ public sealed class FlutterWaveServices: IFlutterWaveServices
 
     private async Task<bool> CreateAuthTokenAsync()
     {
-        using (var response = await _flutterAuthHttpClient.PostAsync("", null))
+        using (var response = await _interswitchAuthHttpClient.PostAsync("", null))
         {
             response.EnsureSuccessStatusCode();
             var body = await response.Content.ReadFromJsonAsync<InterswitchAuthResponse>();

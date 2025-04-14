@@ -296,10 +296,10 @@ public static class ServiceExtension
    ConfigureFlutterWave
    (this IServiceCollection services)
     {
-        services.AddHttpClient("flutterAuth", (serviceProvider, client) =>
+        services.AddHttpClient("interswitchAuth", (serviceProvider, client) =>
         {
-            string clientId = Environment.GetEnvironmentVariable("flutterClientId")!;
-            string secretKey = Environment.GetEnvironmentVariable("flutterSecretKey")!;
+            string clientId = Environment.GetEnvironmentVariable("interswitchClientId")!;
+            string secretKey = Environment.GetEnvironmentVariable("interswitchSecretKey")!;
             string concatenatedString = clientId + ":" + secretKey;
             var encodedString = Convert.ToBase64String(Encoding.UTF8.GetBytes(concatenatedString));
             client.DefaultRequestHeaders.Add("accept", "application/json");
@@ -308,13 +308,13 @@ public static class ServiceExtension
             string authBaseUrl = "https://passport.k8.isw.la/passport/oauth/token?grant_type=client_credentials";
             client.BaseAddress = new Uri(authBaseUrl);
         });
-        services.AddHttpClient("flutterServices", (serviceProvider, client) =>
+        services.AddHttpClient("interswitchServices", (serviceProvider, client) =>
             {
                 client.DefaultRequestHeaders.Add("accept", "application/json");
                 string serviesBaseUrl = "https://qa.interswitchng.com/quicktellerservice/api/v5";
                 client.BaseAddress = new Uri(serviesBaseUrl);
             });
 
-        services.AddScoped<IFlutterWaveServices, FlutterWaveServices>();
+        services.AddScoped<IInterswitchServices, InterswitchServices>();
     }
 }

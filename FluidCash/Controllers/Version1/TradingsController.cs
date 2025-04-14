@@ -10,9 +10,9 @@ namespace FluidCash.Controllers.Version1;
 public class TradingsController:V1BaseController
 {
     private readonly ITradingServices _tradingServices;
-    private readonly IFlutterWaveServices _flutterWaveServices;
+    private readonly IInterswitchServices _flutterWaveServices;
 
-    public TradingsController(ITradingServices tradingServices, IFlutterWaveServices flutterWaveServices)
+    public TradingsController(ITradingServices tradingServices, IInterswitchServices flutterWaveServices)
     {
         _tradingServices = tradingServices;
         _flutterWaveServices = flutterWaveServices;

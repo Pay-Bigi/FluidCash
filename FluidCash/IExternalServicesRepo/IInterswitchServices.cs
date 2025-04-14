@@ -2,7 +2,7 @@
 
 namespace FluidCash.IExternalServicesRepo;
 
-public interface IFlutterWaveServices
+public interface IInterswitchServices
 {
     Task<StandardResponse<string>> RechargeAirtimeAsync(string? phoneNumber, string? amount, string? network);
 }
