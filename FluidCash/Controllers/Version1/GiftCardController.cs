@@ -30,7 +30,7 @@ public class GiftCardController:V1BaseController
         return StatusCode(result.StatusCode, result);
     }
 
-    [HttpGet("get-giftcard-{giftCardId}")]
+    [HttpGet("get-giftcard")]
     public async Task<IActionResult> GetGiftCardByIdAsync([FromQuery] string giftCardId)
     {
         var result = await _giftCardServices.GetGiftCardByIdAsync(giftCardId);
