@@ -173,6 +173,32 @@ public class GiftCardServices : IGiftCardServices
         return giftCard;
     }
 
+    public async Task<StandardResponse<GiftCardResponseDto>?>
+        GetGiftCardByIdApiAsync
+        (string cardId)
+    {
+        // Base query: Get non-deleted gift cards by ID
+        var query = _giftCardRepo.GetByCondition(crd => crd.Id == cardId);
+
+        // Execute query
+        var giftCard = await query
+            .Select(x => new GiftCardResponseDto(
+                x.Category,
+                x.SubCategory,
+                x.GiftCardRates.Any() ? x.GiftCardRates.Select(y => new GiftCardRateResponseDto(
+                    y.CountryCode,
+                    y.Currency,
+                    y.Rate,
+                    x.Id,
+                    y.Id
+                )) : null
+            ))
+            .FirstOrDefaultAsync();
+
+        // Return result
+        return StandardResponse<GiftCardResponseDto>.Success(giftCard);
+    }
+
     public async Task<decimal>
         GetGiftCardRateByIdAsync(string giftCardRateId)
     {

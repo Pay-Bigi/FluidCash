@@ -33,7 +33,7 @@ public class GiftCardController:V1BaseController
     [HttpGet("get-giftcard")]
     public async Task<IActionResult> GetGiftCardByIdAsync([FromQuery] string giftCardId)
     {
-        var result = await _giftCardServices.GetGiftCardByIdAsync(giftCardId);
+        var result = await _giftCardServices.GetGiftCardByIdApiAsync(giftCardId);
         return Ok(result);
     }
 
