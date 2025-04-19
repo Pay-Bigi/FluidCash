@@ -192,7 +192,8 @@ public sealed class TradingServices : ITradingServices
                 CardAmount = buyGiftCardDto.amount,
                 ExchangeRate = exchangeRate,
                 GiftCardId = buyGiftCardDto.giftCardId,
-                WalletId = buyGiftCardDto.walletId
+                WalletId = buyGiftCardDto.walletId,
+                CreatedBy = userId
             };
             var transaction = new WalletTransaction
             {
@@ -200,7 +201,8 @@ public sealed class TradingServices : ITradingServices
                 TransactionReference = trade.Id,
                 Type = TransactionType.GiftCardPurchase,
                 WalletId = buyGiftCardDto.walletId,
-                TradingId = trade.Id
+                TradingId = trade.Id,
+                CreatedBy = userId
             };
             await _tradingRepo.AddAsync(trade);
             await _transactionRepo.AddAsync(transaction);
@@ -438,7 +440,8 @@ public sealed class TradingServices : ITradingServices
                 CardAmount = sellGiftCardDto.cardAmount,
                 ExchangeRate = exchangeRate,
                 GiftCardId = sellGiftCardDto.giftCardId,
-                WalletId = sellGiftCardDto.walletId
+                WalletId = sellGiftCardDto.walletId,
+                CreatedBy = userId
             };
             if (sellGiftCardDto.cardImage is not null)
             {
