@@ -218,7 +218,8 @@ public sealed class TradingServices : ITradingServices
                 validUntil: trade.ValidUntil,
                 otherDetails: trade.OtherDetails,
                 giftCardDetails: cardToBuyResponse,
-                walletId: trade.WalletId
+                walletId: trade.WalletId,
+                status: trade.Status
             );
             return StandardResponse<WalletTradingResponse>.Success(tradeResponse);
         }
@@ -320,7 +321,8 @@ public sealed class TradingServices : ITradingServices
                         rate.Id
                     )).ToList()
                 ),
-                walletId: trade.WalletId
+                walletId: trade.WalletId,
+                status: trade.Status
             );
         }).ToList();
 
@@ -401,7 +403,8 @@ public sealed class TradingServices : ITradingServices
                         rate.Id
                     )).ToList()
                 ),
-                walletId: trade.WalletId
+                walletId: trade.WalletId,
+                status: trade.Status
             );
         }).ToList();
 
@@ -474,7 +477,8 @@ public sealed class TradingServices : ITradingServices
                 validUntil: trade.ValidUntil,
                 otherDetails: trade.OtherDetails,
                 giftCardDetails: cardToSellResponse,
-                walletId: trade.WalletId
+                walletId: trade.WalletId,
+                status: trade.Status
             );
             return StandardResponse<WalletTradingResponse>.Success(tradeResponse);
         }

@@ -210,7 +210,8 @@ public sealed class AccountMgtServices : IAccountMgtServices
                         trans.Trading.ValidUntil,
                         trans.Trading.OtherDetails,
                         await _giftCardServices.GetGiftCardByIdAsync(trans.Trading.GiftCardId), // Awaiting properly
-                        trans.Trading.WalletId
+                        trans.Trading.WalletId,
+                        trans.Trading.Status
                     )
                     : null // Handle cases where Trading is null
             )

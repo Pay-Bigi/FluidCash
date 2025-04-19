@@ -227,7 +227,8 @@ public sealed class WalletServices : IWalletServices
                 trading.GiftCard.SubCategory,
                 trading.GiftCard.GiftCardRates.Select(MapToGiftCardRateResponseDto).ToList()
             ),
-            trading.WalletId
+            trading.WalletId,
+            status: trading.Status
         );
     }
 
