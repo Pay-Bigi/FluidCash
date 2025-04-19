@@ -22,7 +22,7 @@ public class TradingsController:V1BaseController
     public async Task<IActionResult> BuyGiftCardAsync([FromBody] BuyGiftCardParams buyGiftCardParams)
     {
         string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var result = await _tradingServices.BuyGiftCardAsync(buyGiftCardParams,userId);
+        var result = await _tradingServices.BuyGiftCardAsync(buyGiftCardParams,userId!);
         return StatusCode(result.StatusCode, result);
     }
 
@@ -38,7 +38,7 @@ public class TradingsController:V1BaseController
     public async Task<IActionResult> SellGiftCardAsync([FromForm] SellGiftCardParams sellGiftCardParams)
     {
         string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var result = await _tradingServices.SellGiftCardAsync(sellGiftCardParams, userId);
+        var result = await _tradingServices.SellGiftCardAsync(sellGiftCardParams, userId!);
         return StatusCode(result.StatusCode, result);
     }
 
@@ -46,7 +46,7 @@ public class TradingsController:V1BaseController
     public async Task<IActionResult> ApproveGiftCardSellAsync([FromBody] ApproveGiftCardSellParams approveGiftCardSellParams)
     {
         string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var result = await _tradingServices.ApproveGiftCardSellAsync(approveGiftCardSellParams, userId);
+        var result = await _tradingServices.ApproveGiftCardSellAsync(approveGiftCardSellParams, userId!);
         return StatusCode(result.StatusCode, result);   
     }
 
@@ -54,7 +54,7 @@ public class TradingsController:V1BaseController
     public async Task<IActionResult> GetUserTradingsAsync([FromQuery] GetTradingsFilterParams filterParams)
     {
         string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var result = await _tradingServices.GetUserTradingsAsync(filterParams, userId);
+        var result = await _tradingServices.GetUserTradingsAsync(filterParams, userId!);
         return StatusCode(result.StatusCode, result);
     }
 
@@ -70,7 +70,7 @@ public class TradingsController:V1BaseController
     public async Task<IActionResult> DeleteTradeAsync([FromQuery] string tradeId)
     {
         string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var result = await _tradingServices.DeleteTradeAync(tradeId, userId);
+        var result = await _tradingServices.DeleteTradeAync(tradeId, userId!);
         return StatusCode(result.StatusCode, result);
     }
 

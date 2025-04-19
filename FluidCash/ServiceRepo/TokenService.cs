@@ -23,12 +23,12 @@ public sealed class TokenService : ITokenService
 
     public async Task<string> CreateTokenAsync(AppUser user)
     {
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.TokenKey));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.TokenKey!));
         var roles = await _userManager.GetRolesAsync(user);
         var claim = new List<Claim>
         {
-            new Claim(ClaimTypes.Email, user.Email),
-            new Claim(ClaimTypes.NameIdentifier, user.Id)
+            new Claim(ClaimTypes.Email, user.Email!),
+            new Claim(ClaimTypes.NameIdentifier, user.Id!)
         };
 
         foreach (var role in roles)

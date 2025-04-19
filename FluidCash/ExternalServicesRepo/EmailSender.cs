@@ -50,7 +50,7 @@ public class EmailSender : IEmailSender
         (SendEmailParams sendEmailRequestDto, string emailTemplate)
     {
         var emailLogs = new List<EmailLog>();
-        foreach (var recipent in sendEmailRequestDto.mailRecipientsInfo)
+        foreach (var recipent in sendEmailRequestDto.mailRecipientsInfo!)
         {
             var recipientName = recipent.recipientName;
             var messageBody = sendEmailRequestDto.mailBody;
@@ -79,11 +79,11 @@ public class EmailSender : IEmailSender
 
             EmailParams emailRequest = new EmailParams()
             {
-                SenderEmail = senderMail,
+                SenderEmail = senderMail!,
                 EmailSubject = mailSubject,
                 EmailBody = emailTemplate,
-                RecipientEmail = recipentEmailAddress,
-                SenderName = orgName,
+                RecipientEmail = recipentEmailAddress!,
+                SenderName = orgName!,
                 IsHtml = isHtml,
                 FileAttachmentPaths = fileAttachmentPaths
             };
@@ -99,7 +99,7 @@ public class EmailSender : IEmailSender
             if (!result.Succeeded)
             {
                 emailLog.IsSuccessful = false;
-                emailLog.Detail = result.Errors.FirstOrDefault().Description;
+                emailLog.Detail = result.Errors.FirstOrDefault()!.Description;
                 emailLog.SenderName = orgName;
                 emailLog.RecipientEmail = recipentEmailAddress;
             }

@@ -52,7 +52,7 @@ public class CloudinaryServices : ICloudinaryServices
             }
             else
             {
-                filePathUrl = imageUploadResult.Uri.AbsoluteUri;
+                filePathUrl = imageUploadResult.Url.AbsoluteUri;
                 publicId = imageUploadResult.PublicId;
             }
         }
@@ -72,7 +72,7 @@ public class CloudinaryServices : ICloudinaryServices
             }
             else
             {
-                filePathUrl = videosUploadResult.Uri.AbsoluteUri;
+                filePathUrl = videosUploadResult.Url.AbsoluteUri;
                 publicId = videosUploadResult.PublicId;
             }
         }
@@ -92,7 +92,7 @@ public class CloudinaryServices : ICloudinaryServices
             }
             else
             {
-                filePathUrl = rawUploadResult.Uri.AbsoluteUri;
+                filePathUrl = rawUploadResult.Url.AbsoluteUri;
                 publicId = rawUploadResult.PublicId;
             }
         }

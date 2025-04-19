@@ -32,7 +32,7 @@ public static class ServiceExtension
     RegisterDbContext
         (this IServiceCollection services, IConfiguration configuration)
     {
-        string connectionString = Environment.GetEnvironmentVariable("FluidCashDB");
+        string connectionString = Environment.GetEnvironmentVariable("FluidCashDB")!;
         services.AddDbContext<DataContext>(options =>
         options.UseSqlServer(connectionString)
         );
@@ -97,7 +97,7 @@ public static class ServiceExtension
                     ValidateAudience = true,
                     ValidAudience = validAudience,
                     ValidateIssuerSigningKey = true, // Ensure signature is validated
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JwtSettings_TokenKey")))
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JwtSettings_TokenKey")!))
 
                 };
             });
@@ -133,8 +133,8 @@ public static class ServiceExtension
             opts.InvalidModelStateResponseFactory = context =>
             {
                 var errors = context.ModelState
-                    .Where(ms => ms.Value.Errors.Any())
-                    .SelectMany(ms => ms.Value.Errors
+                    .Where(ms => ms.Value!.Errors.Any())
+                    .SelectMany(ms => ms.Value!.Errors
                     .Select(e => new ValidationError
                     {
                         FieldName = ms.Key,
@@ -197,7 +197,7 @@ public static class ServiceExtension
         var redisPass = Environment.GetEnvironmentVariable("Redis_Password");
         services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(new ConfigurationOptions
         {
-            EndPoints = { { redisHost, 10324 } },
+            EndPoints = { { redisHost!, 10324 } },
             User = redisUser,
             Password = redisPass,
             ConnectRetry = 3,
@@ -244,9 +244,9 @@ public static class ServiceExtension
                                                   .Get<CloudinaryConfig>();  //Used for reading config from file like appsettings.json*/
             var cloudinaryConfig = new CloudinaryConfig
             {
-                CLOUDNAME = Environment.GetEnvironmentVariable("CLOUDINARY_CLOUDNAME"),
-                APIKEY = Environment.GetEnvironmentVariable("CLOUDINARY_APIKEY"),
-                APISECRET = Environment.GetEnvironmentVariable("CLOUDINARY_APISECRET")
+                CLOUDNAME = Environment.GetEnvironmentVariable("CLOUDINARY_CLOUDNAME")!,
+                APIKEY = Environment.GetEnvironmentVariable("CLOUDINARY_APIKEY")!,
+                APISECRET = Environment.GetEnvironmentVariable("CLOUDINARY_APISECRET")!
             };
 
             var cloudinary = new Cloudinary(new Account(
