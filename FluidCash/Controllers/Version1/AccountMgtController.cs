@@ -19,7 +19,7 @@ public class AccountMgtController:V1BaseController
         ([FromBody] BankDetailsDto bankDetailsDto)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var response = await _accountMgtServices.CreateBankDetails(bankDetailsDto, userId);
+        var response = await _accountMgtServices.CreateBankDetails(bankDetailsDto, userId!);
         return StatusCode(response.StatusCode, response);
     }
 
@@ -35,7 +35,7 @@ public class AccountMgtController:V1BaseController
     public async Task<IActionResult> GetUserDashboardAsync()
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var response = await _accountMgtServices.GetUserDashboardAsync(userId);
+        var response = await _accountMgtServices.GetUserDashboardAsync(userId!);
         return StatusCode(response.StatusCode, response);
     }
 
@@ -61,7 +61,7 @@ public class AccountMgtController:V1BaseController
         ([FromQuery] string accountId)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var response = await _accountMgtServices.DeleteDpAsync(accountId, userId);
+        var response = await _accountMgtServices.DeleteDpAsync(accountId, userId!);
         return StatusCode(response.StatusCode, response);
     }
 
@@ -70,7 +70,7 @@ public class AccountMgtController:V1BaseController
         ([FromBody] BankDetailsDto bankDetailsDto)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var response = await _accountMgtServices.UpdateBankDetails(bankDetailsDto, userId);
+        var response = await _accountMgtServices.UpdateBankDetails(bankDetailsDto, userId!);
         return StatusCode(response.StatusCode, response);
     }
 
@@ -79,7 +79,7 @@ public class AccountMgtController:V1BaseController
         ([FromBody] InitiateWithdrawalParams withdrawalParams)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var response = await _accountMgtServices.InitiateWithdrawalAsync(withdrawalParams, userId);
+        var response = await _accountMgtServices.InitiateWithdrawalAsync(withdrawalParams, userId!);
         return StatusCode(response.StatusCode, response);
     }
 

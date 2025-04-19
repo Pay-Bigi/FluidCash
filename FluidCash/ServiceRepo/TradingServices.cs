@@ -68,7 +68,7 @@ public sealed class TradingServices : ITradingServices
 
         trade.UpdatedAt = DateTime.UtcNow;
         trade.UpdatedBy = userId;
-
+        _tradingRepo.Update(trade);
         await _tradingRepo.SaveChangesAsync();
 
         string? successMessage = "Trade status updated successfully";
@@ -123,6 +123,7 @@ public sealed class TradingServices : ITradingServices
         }
         trade.UpdatedAt = DateTime.UtcNow;
         trade.UpdatedBy = userId;
+        _tradingRepo.Update(trade);
         await _tradingRepo.SaveChangesAsync();
 
         string? successMessage = "Trade status updated successfully";
@@ -243,6 +244,7 @@ public sealed class TradingServices : ITradingServices
         _tradingRepo.SoftDelete(tradeToDelete);
         tradeToDelete.UpdatedBy = userId;
         tradeToDelete.UpdatedAt = DateTime.UtcNow;
+        _tradingRepo.Update(tradeToDelete);
         await _tradingRepo.SaveChangesAsync();
 
         string? successMessage = "Trade deleted successfully";

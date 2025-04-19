@@ -51,20 +51,22 @@ public sealed class WalletServices : IWalletServices
             return false;
         }
         accountToCredit.Balance += creditWalletParams.amount;
+        _walletRepo.Update(accountToCredit);
         await _walletRepo.SaveChangesAsync();
         return true;
     }
 
     public async Task<bool> DebitWalletAsync(CreditAndDebitWalletParams? debitWalletParams, string? userId)
     {
-        var accountToCredit = _walletRepo.GetNonDeletedByCondition(wallet => wallet.Id == debitWalletParams.walletId)
+        var accountToDedit = _walletRepo.GetNonDeletedByCondition(wallet => wallet.Id == debitWalletParams.walletId)
             .FirstOrDefault();
-        if (accountToCredit is null)
+        if (accountToDedit is null)
         {
             return false;
         }
-        if(accountToCredit.Balance <debitWalletParams.amount) { return false; }
-        accountToCredit.Balance -= debitWalletParams.amount;
+        if(accountToDedit.Balance <debitWalletParams.amount) { return false; }
+        accountToDedit.Balance -= debitWalletParams.amount;
+        _walletRepo.Update(accountToDedit);
         await _walletRepo.SaveChangesAsync();
         return true;
     }
@@ -223,9 +225,9 @@ public sealed class WalletServices : IWalletServices
             trading.ValidUntil,
             trading.OtherDetails,
             new GiftCardResponseDto(
-                trading.GiftCard.Category,
+                trading.GiftCard!.Category,
                 trading.GiftCard.SubCategory,
-                trading.GiftCard.GiftCardRates.Select(MapToGiftCardRateResponseDto).ToList()
+                trading.GiftCard.GiftCardRates!.Select(MapToGiftCardRateResponseDto).ToList()
             ),
             trading.WalletId,
             status: trading.Status
@@ -238,7 +240,7 @@ public sealed class WalletServices : IWalletServices
             rate.CountryCode,
             rate.Currency,
             rate.Rate,
-            rate.GiftCard.Id,
+            rate.GiftCard!.Id,
             rate.Id
         );
     }

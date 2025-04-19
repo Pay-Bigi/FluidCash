@@ -31,7 +31,9 @@ public sealed class AccountMgtServices : IAccountMgtServices
     }
 
 
-    public async Task<bool> CreateUserAccountAsync(CreateUserAccountParams createUserAccountDto)
+    public async Task<bool> 
+        CreateUserAccountAsync
+        (CreateUserAccountParams createUserAccountDto)
     {
         try
         {
@@ -72,8 +74,12 @@ public sealed class AccountMgtServices : IAccountMgtServices
             string? errorMessage = "Account not found";
             return StandardResponse<string>.Failed(data: null, errorMessage);
         }
-        var cloudinaryId = account.DpCloudinaryId;
-        var resp = await _cloudinaryServices.DeleteFileFromCloudinaryAsync(cloudinaryId);
+        if (string.IsNullOrWhiteSpace(account.DpCloudinaryId))
+        {
+            string? errorMessage = "No existing display image";
+            return StandardResponse<string>.Failed(data: null, errorMessage);
+        }
+        var resp = await _cloudinaryServices.DeleteFileFromCloudinaryAsync(account.DpCloudinaryId);
         if (!resp.Succeeded)
         {
             string? errorMsg = "Failed to delete dp";
@@ -81,6 +87,7 @@ public sealed class AccountMgtServices : IAccountMgtServices
         }
         account.DpCloudinaryId = string.Empty;
         account.DpUrl = string.Empty;
+        _accountRepo.Update(account);
         await _accountRepo.SaveChangesAsync();
 
         string? successMsg = "Dp deleted successfully";
@@ -241,6 +248,11 @@ public sealed class AccountMgtServices : IAccountMgtServices
             .Include(acc => acc.AppUser)
             .Include(acc => acc.Wallet)
             .FirstOrDefault();
+        if (account is null)
+        {
+            string? errorMessage = "Account not found";
+            return StandardResponse<string>.Failed(data: null, errorMessage);
+        }
 
         bool? is2FaEnabled = account?.AppUser?.TwoFactorEnabled;
         if (is2FaEnabled is true)
@@ -261,12 +273,15 @@ public sealed class AccountMgtServices : IAccountMgtServices
             string? errorMsg = "Failed to complete withdrawal";
             return StandardResponse<string>.Failed(data: null, errorMessage: errorMsg);
         }
-        account.Wallet.Balance -= withdrawalParams.amount;
+        account!.Wallet!.Balance -= withdrawalParams.amount;
 
         //Create withdrawal transaction
-
+        _accountRepo.Update(account);
         await _accountRepo.SaveChangesAsync();
-        throw new NotImplementedException();
+
+        //Ensure wallet is debited else update wallet
+        string? successMsg = "Withdrawal successful";
+        return StandardResponse<string>.Success(data: successMsg);
     }
 
     //Pending on 2FA implementation
@@ -360,6 +375,7 @@ public sealed class AccountMgtServices : IAccountMgtServices
         }
         account.DpCloudinaryId = uploadResp.Data.filePublicId;
         account.DpUrl = uploadResp.Data.fileUrlPath;
+        _accountRepo.Update(account);
         await _accountRepo.SaveChangesAsync();
 
         string? successMsg = "Photo upload successful";
