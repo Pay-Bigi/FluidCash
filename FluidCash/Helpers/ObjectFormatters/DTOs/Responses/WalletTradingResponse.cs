@@ -14,6 +14,7 @@ public record WalletTradingResponse
     DateTime? validUntil,
     string? otherDetails,
     GiftCardResponseDto? giftCardDetails,
-    string? walletId
+    string? walletId,
+    TradingStatus? status
     //Consider adding card and wallet details
 );
