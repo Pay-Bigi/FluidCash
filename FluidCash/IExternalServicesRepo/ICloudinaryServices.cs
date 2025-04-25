@@ -5,6 +5,9 @@ namespace FluidCash.IExternalServicesRepo;
 
 public interface ICloudinaryServices
 {
+    Task<StandardResponse<ICollection<DocumentUploadResponse>>>
+        UploadFilesToCloudinaryAsync(IFormFileCollection filesForUpload);
+
     Task<StandardResponse<DocumentUploadResponse>>
         UploadFileToCloudinaryAsync
         (IFormFile request);

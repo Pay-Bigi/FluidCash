@@ -209,7 +209,7 @@ public sealed class AccountMgtServices : IAccountMgtServices
                     ? new WalletTradingResponse(
                         trans.Trading.Id,
                         trans.Trading.ExchangeValue,
-                        trans.Trading.CardImageUrl,
+                        trans.Trading.CardsImageUrl,
                         trans.Trading.CardAmount,
                         trans.Trading.ExchangeRate,
                         trans.Trading.CreatedAt,

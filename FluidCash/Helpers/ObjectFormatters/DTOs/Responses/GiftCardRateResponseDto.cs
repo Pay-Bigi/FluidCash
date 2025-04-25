@@ -6,5 +6,6 @@ public record GiftCardRateResponseDto
     string? currency,
     decimal rate,
     string? giftCardId,
-    string? giftCardRateId
+    string? giftCardRateId,
+    decimal? sellChargeRate
 );

@@ -293,7 +293,7 @@ public static class ServiceExtension
     }
 
     public static void
-   ConfigureFlutterWave
+   ConfigureInterswitchServices
    (this IServiceCollection services)
     {
         services.AddHttpClient("interswitchAuth", (serviceProvider, client) =>

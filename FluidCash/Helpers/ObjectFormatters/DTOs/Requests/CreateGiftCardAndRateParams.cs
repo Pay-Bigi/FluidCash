@@ -6,5 +6,6 @@ public record CreateGiftCardAndRateParams
     string? subCategory,
     string? countryCode,
     string? currency,
-    decimal rate
+    decimal rate,
+    decimal? sellChargeRate
 );

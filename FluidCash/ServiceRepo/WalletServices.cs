@@ -217,7 +217,7 @@ public sealed class WalletServices : IWalletServices
         (
             trading.Id,
             trading.ExchangeValue,
-            trading.CardImageUrl,
+            trading.CardsImageUrl,
             trading.CardAmount,
             trading.ExchangeRate,
             trading.CreatedAt,
@@ -241,7 +241,8 @@ public sealed class WalletServices : IWalletServices
             rate.Currency,
             rate.Rate,
             rate.GiftCard!.Id,
-            rate.Id
+            rate.Id,
+            rate.SellChargeRate
         );
     }
     #endregion

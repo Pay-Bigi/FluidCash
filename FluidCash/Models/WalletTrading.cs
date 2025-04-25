@@ -9,8 +9,8 @@ public class WalletTrading: BaseEntity
     public DateTime? ValidUntil { get; set; }
     public string? OtherDetails { get; set; }
     public decimal? ExchangeValue { get; set; }
-    public string? CardImageUrl { get; set; }
-    public string? CardImageId { get; set; }
+    public ICollection<string>? CardsImageUrl { get; set; }
+    public ICollection<string>? CardImageId { get; set; }
     public decimal? CardAmount { get; set; }
     public decimal? ExchangeRate { get; set; }
     public string? GiftCardId { get; set; }

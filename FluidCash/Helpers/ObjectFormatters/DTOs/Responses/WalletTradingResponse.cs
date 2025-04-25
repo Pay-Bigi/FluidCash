@@ -6,7 +6,7 @@ public record WalletTradingResponse
 (
     string? tradeId,
     decimal? exchangeValue,
-    string? cardImageUrl,
+    IEnumerable<string>? cardImageUrl,
     decimal? cardAmount,
     decimal? exchangeRate,
     DateTime? tradeDateTime,

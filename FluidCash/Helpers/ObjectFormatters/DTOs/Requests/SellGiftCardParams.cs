@@ -4,7 +4,7 @@ public record SellGiftCardParams
 (
     DateTime? validUntil,
     string? otherDetails,
-    IFormFile? cardImage,
+    IFormFileCollection? cardImages,
     decimal? cardAmount,
     string? giftCardId,
     string? giftCardRateId,

@@ -48,7 +48,8 @@ public class GiftCardServices : IGiftCardServices
             CountryCode = createGiftCardAndRateDto.countryCode,
             Currency = createGiftCardAndRateDto.currency,
             GiftCardId = giftCard.Id,
-            CreatedBy = userId
+            CreatedBy = userId,
+            SellChargeRate = createGiftCardAndRateDto.sellChargeRate
         };
 
         await _giftCardRepo.AddAsync(giftCard);
@@ -150,15 +151,16 @@ public class GiftCardServices : IGiftCardServices
 
         // Execute query
         var giftCards = await query.Include(crd => crd.GiftCardRates)
-            .Select(x => new GiftCardResponseDto(
-                x.Category,
-                x.SubCategory,
-                x.GiftCardRates!.Select(y => new GiftCardRateResponseDto(
-                    y.CountryCode,
-                    y.Currency,
-                    y.Rate,
-                    x.Id,
-                    y.Id
+            .Select(crd => new GiftCardResponseDto(
+                crd.Category,
+                crd.SubCategory,
+                crd.GiftCardRates!.Select(rate => new GiftCardRateResponseDto(
+                    rate.CountryCode,
+                    rate.Currency,
+                    rate.Rate,
+                    crd.Id,
+                    rate.Id,
+                    rate.SellChargeRate
                 ))
             ))
             .ToListAsync();
@@ -179,15 +181,16 @@ public class GiftCardServices : IGiftCardServices
 
         // Execute query
         var giftCard = await query
-            .Select(x => new GiftCardResponseDto(
-                x.Category,
-                x.SubCategory,
-                x.GiftCardRates!.Any() ? x.GiftCardRates!.Select(y => new GiftCardRateResponseDto(
-                    y.CountryCode,
-                    y.Currency,
-                    y.Rate,
-                    x.Id,
-                    y.Id
+            .Select(crd => new GiftCardResponseDto(
+                crd.Category,
+                crd.SubCategory,
+                crd.GiftCardRates!.Any() ? crd.GiftCardRates!.Select(rate => new GiftCardRateResponseDto(
+                    rate.CountryCode,
+                    rate.Currency,
+                    rate.Rate,
+                    crd.Id,
+                    rate.Id,
+                    rate.SellChargeRate
                 )) : null
             ))
             .FirstOrDefaultAsync();
@@ -206,15 +209,16 @@ public class GiftCardServices : IGiftCardServices
 
         // Execute query
         var giftCard = await query
-            .Select(x => new GiftCardResponseDto(
-                x.Category,
-                x.SubCategory,
-                x.GiftCardRates!.Any() ? x.GiftCardRates!.Select(y => new GiftCardRateResponseDto(
-                    y.CountryCode,
-                    y.Currency,
-                    y.Rate,
-                    x.Id,
-                    y.Id
+            .Select(card => new GiftCardResponseDto(
+                card.Category,
+                card.SubCategory,
+                card.GiftCardRates!.Any() ? card.GiftCardRates!.Select(rate => new GiftCardRateResponseDto(
+                    rate.CountryCode,
+                    rate.Currency,
+                    rate.Rate,
+                    card.Id,
+                    rate.Id,
+                    rate.SellChargeRate
                 )) : null
             ))
             .FirstOrDefaultAsync();
@@ -228,6 +232,17 @@ public class GiftCardServices : IGiftCardServices
     {
         var rate = await _giftCardRateRepo.GetNonDeletedByCondition(crd => crd.Id == giftCardRateId)
             .Select(crd => crd.Rate)
+            .FirstOrDefaultAsync();
+
+        // Return result
+        return rate;
+    }
+
+    public async Task<decimal?>
+        GetGiftCardSellChargeRateByIdAsync(string giftCardRateId)
+    {
+        var rate = await _giftCardRateRepo.GetNonDeletedByCondition(crd => crd.Id == giftCardRateId)
+            .Select(crd => crd.SellChargeRate)
             .FirstOrDefaultAsync();
 
         // Return result
@@ -271,13 +286,14 @@ public class GiftCardServices : IGiftCardServices
 
         // Execute query
         var giftCardRates = await query
-            .Select(x =>
+            .Select(rate =>
                 new GiftCardRateResponseDto(
-                    x.CountryCode,
-                    x.Currency,
-                    x.Rate,
-                    x.GiftCardId,
-                    x.Id
+                    rate.CountryCode,
+                    rate.Currency,
+                    rate.Rate,
+                    rate.GiftCardId,
+                    rate.Id,
+                    rate.SellChargeRate
                 )
             ).ToListAsync();
 
@@ -354,6 +370,10 @@ public class GiftCardServices : IGiftCardServices
         if (updateGiftCardRateDto.rate.HasValue)
         {
             cardRateToUpdate.Rate = updateGiftCardRateDto.rate.Value;
+        }
+        if(updateGiftCardRateDto.sellChargeRate.HasValue)
+        {
+            cardRateToUpdate.SellChargeRate = updateGiftCardRateDto.sellChargeRate;
         }
         cardRateToUpdate.UpdatedBy = userId;
         cardRateToUpdate.UpdatedAt = DateTime.UtcNow;

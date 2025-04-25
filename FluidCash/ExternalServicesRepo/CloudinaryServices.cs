@@ -105,6 +105,90 @@ public class CloudinaryServices : ICloudinaryServices
         return StandardResponse<DocumentUploadResponse>.Success(data: response);
     }
 
+    public async Task<StandardResponse<ICollection<DocumentUploadResponse>>>
+        UploadFilesToCloudinaryAsync(IFormFileCollection filesForUpload)
+    {
+        var listOfImageExtensions = new List<string> { ".jpg", ".png", ".jpeg" };
+        var listOfVideoExtensions = new List<string> { ".mpeg", ".mpg", ".3gp", ".mp4" };
+        string folderName = "PayBigi";
+        var uploadResults = new List<DocumentUploadResponse>();
+
+        foreach (var fileForUpload in filesForUpload)
+        {
+            string filePathUrl = string.Empty;
+            string publicId = string.Empty;
+            string errorOccured = string.Empty;
+
+            using var stream = fileForUpload.OpenReadStream();
+            var cloudFileName = string.Concat(Path.GetFileNameWithoutExtension(fileForUpload.FileName), Ulid.NewUlid().ToString().Substring(1, 7));
+            cloudFileName = Regex.Replace(cloudFileName, @"[\W_]", "");
+
+            if (listOfImageExtensions.Any(ext => fileForUpload.FileName.ToLower().EndsWith(ext)))
+            {
+                var uploadParams = new ImageUploadParams
+                {
+                    File = new FileDescription(cloudFileName, stream),
+                    Transformation = new Transformation().Height(500).Width(500).Crop("fill").Gravity("face"),
+                    Folder = folderName,
+                    PublicId = cloudFileName
+                };
+
+                var result = await _cloudinaryServices.UploadAsync(uploadParams);
+                if (result.Error != null)
+                {
+                    errorOccured = $"Failed to upload {fileForUpload.FileName}. Details {result.Error.Message}";
+                    return StandardResponse<ICollection<DocumentUploadResponse>>.Failed(null, errorOccured);
+                }
+
+                filePathUrl = result.Url.AbsoluteUri;
+                publicId = result.PublicId;
+            }
+            else if (listOfVideoExtensions.Any(ext => fileForUpload.FileName.ToLower().EndsWith(ext)))
+            {
+                var uploadParams = new VideoUploadParams
+                {
+                    File = new FileDescription(cloudFileName, stream),
+                    Folder = folderName,
+                    PublicId = cloudFileName
+                };
+
+                var result = await _cloudinaryServices.UploadAsync(uploadParams);
+                if (result.Error != null)
+                {
+                    errorOccured = $"Failed to upload {fileForUpload.FileName}. Details {result.Error.Message}";
+                    return StandardResponse<ICollection<DocumentUploadResponse>>.Failed(null, errorOccured);
+                }
+
+                filePathUrl = result.Url.AbsoluteUri;
+                publicId = result.PublicId;
+            }
+            else
+            {
+                var uploadParams = new RawUploadParams
+                {
+                    File = new FileDescription(cloudFileName, stream),
+                    Folder = folderName,
+                    PublicId = cloudFileName
+                };
+
+                var result = await _cloudinaryServices.UploadAsync(uploadParams);
+                if (result.Error != null)
+                {
+                    errorOccured = $"Failed to upload {fileForUpload.FileName}. Details {result.Error.Message}";
+                    return StandardResponse<ICollection<DocumentUploadResponse>>.Failed(null, errorOccured);
+                }
+
+                filePathUrl = result.Url.AbsoluteUri;
+                publicId = result.PublicId;
+            }
+
+            uploadResults.Add(new DocumentUploadResponse(filePathUrl, publicId));
+        }
+
+        return StandardResponse<ICollection<DocumentUploadResponse>>.Success(uploadResults);
+    }
+
+
     public async Task<StandardResponse<string>>
         DeleteFileFromCloudinaryAsync
         (string filePublicId)

@@ -11,7 +11,7 @@ public sealed class InterswitchServices: IInterswitchServices
     private readonly HttpClient _interswitchAuthHttpClient;
     private readonly HttpClient _interswitchServicesHttpClient;
 
-    private string? accessToken = string.Empty;
+    private static string? accessToken = string.Empty;
     private string? terminalId = string.Empty;
 
     public InterswitchServices(IHttpClientFactory httpClientFactory)

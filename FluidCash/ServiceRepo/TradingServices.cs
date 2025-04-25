@@ -100,14 +100,12 @@ public sealed class TradingServices : ITradingServices
             trade.OtherDetails = approveGiftCardPurchaseDto.otherDetails;
             if (approveGiftCardPurchaseDto.cardImage is not null)
             {
-                var imageUploadDetails = await _cloudinaryServices.UploadFileToCloudinaryAsync(approveGiftCardPurchaseDto.cardImage);
+                var imageUploadDetails = await _cloudinaryServices.UploadFilesToCloudinaryAsync(approveGiftCardPurchaseDto.cardImage);
                 if (!imageUploadDetails.Succeeded)
                 {
                     string? errorMsg = "Card image upload failed. Kindly retry";
                     return StandardResponse<string>.Failed(null, errorMsg);
                 }
-                trade.CardImageUrl = imageUploadDetails.Data.fileUrlPath;
-                trade.CardImageId = imageUploadDetails.Data.filePublicId;
             }
         }
         else
@@ -152,7 +150,7 @@ public sealed class TradingServices : ITradingServices
 
             if (buyGiftCardDto.payFromWallet)
             {
-                var debitPayload = new CreditAndDebitWalletParams(buyGiftCardDto.walletId, buyGiftCardDto.amount);
+                var debitPayload = new CreditAndDebitWalletParams(buyGiftCardDto.walletId, exchangeValue);
                 var debitWalletSucceded = await _walletServices.DebitWalletAsync(debitPayload, userId);
                 if (!debitWalletSucceded)
                 {
@@ -213,7 +211,7 @@ public sealed class TradingServices : ITradingServices
             (
                 tradeId: trade.Id,
                 exchangeValue: trade.ExchangeValue,
-                cardImageUrl: trade.CardImageUrl,
+                cardImageUrl: trade.CardsImageUrl,
                 cardAmount: trade.CardAmount,
                 exchangeRate: trade.ExchangeRate,
                 tradeDateTime: trade.CreatedAt,
@@ -307,7 +305,7 @@ public sealed class TradingServices : ITradingServices
             return new WalletTradingResponse(
                 tradeId: trade.Id,
                 exchangeValue: trade.ExchangeValue,
-                cardImageUrl: trade.CardImageUrl,
+                cardImageUrl: trade.CardsImageUrl,
                 cardAmount: trade.CardAmount,
                 exchangeRate: trade.ExchangeRate,
                 tradeDateTime: trade.CreatedAt,
@@ -322,7 +320,8 @@ public sealed class TradingServices : ITradingServices
                         rate.Currency,
                         rate.Rate,
                         trade.GiftCardId,
-                        rate.Id
+                        rate.Id,
+                        rate.SellChargeRate
                     )).ToList()
                 ),
                 walletId: trade.WalletId,
@@ -389,7 +388,7 @@ public sealed class TradingServices : ITradingServices
             return new WalletTradingResponse(
                 tradeId: trade.Id,
                 exchangeValue: trade.ExchangeValue,
-                cardImageUrl: trade.CardImageUrl,
+                cardImageUrl: trade.CardsImageUrl,
                 cardAmount: trade.CardAmount,
                 exchangeRate: trade.ExchangeRate,
                 tradeDateTime: trade.CreatedAt,
@@ -404,7 +403,8 @@ public sealed class TradingServices : ITradingServices
                         rate.Currency,
                         rate.Rate,
                         trade.GiftCardId,
-                        rate.Id
+                        rate.Id,
+                        rate.SellChargeRate
                     )).ToList()
                 ),
                 walletId: trade.WalletId,
@@ -433,28 +433,28 @@ public sealed class TradingServices : ITradingServices
 
 
             var exchangeRate = cardToSellResponse.GiftCardRates
-                .FirstOrDefault(x => x.giftCardRateId == sellGiftCardDto.giftCardRateId)?.rate;
+                .FirstOrDefault(x => x.giftCardRateId == sellGiftCardDto.giftCardRateId)?.sellChargeRate;
             var trade = new WalletTrading
             {
                 Status = TradingStatus.Pending,
                 Type = TradeType.Buy,
-                ExchangeValue = exchangeRate * sellGiftCardDto.cardAmount,
+                ExchangeValue = sellGiftCardDto.cardAmount - (exchangeRate * sellGiftCardDto.cardAmount),
                 CardAmount = sellGiftCardDto.cardAmount,
                 ExchangeRate = exchangeRate,
                 GiftCardId = sellGiftCardDto.giftCardId,
                 WalletId = sellGiftCardDto.walletId,
                 CreatedBy = userId
             };
-            if (sellGiftCardDto.cardImage is not null)
+            if (sellGiftCardDto.cardImages.Any())
             {
-                var imageUploadDetails = await _cloudinaryServices.UploadFileToCloudinaryAsync(sellGiftCardDto.cardImage);
+                var imageUploadDetails = await _cloudinaryServices.UploadFilesToCloudinaryAsync(sellGiftCardDto.cardImages);
                 if (!imageUploadDetails.Succeeded)
                 {
                     string? errorMsg = "Card image upload failed. Kindly retry";
                     return StandardResponse<WalletTradingResponse>.Failed(null, errorMsg);
                 }
-                trade.CardImageUrl = imageUploadDetails.Data.fileUrlPath;
-                trade.CardImageId = imageUploadDetails.Data.filePublicId;
+                trade.CardsImageUrl = imageUploadDetails.Data.Select(x => x.fileUrlPath).ToList();
+                trade.CardImageId = imageUploadDetails.Data.Select(x => x.filePublicId).ToList();
             }
 
             var transaction = new WalletTransaction
@@ -474,7 +474,7 @@ public sealed class TradingServices : ITradingServices
             (
                 tradeId: trade.Id,
                 exchangeValue: trade.ExchangeValue,
-                cardImageUrl: trade.CardImageUrl,
+                cardImageUrl: trade.CardsImageUrl,
                 cardAmount: trade.CardAmount,
                 exchangeRate: trade.ExchangeRate,
                 tradeDateTime: trade.CreatedAt,

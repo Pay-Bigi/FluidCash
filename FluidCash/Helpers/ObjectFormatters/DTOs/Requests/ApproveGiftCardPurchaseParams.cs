@@ -6,7 +6,7 @@ public record ApproveGiftCardPurchaseParams
     bool isApproved,
     DateTime? validUntil,
     string? otherDetails,
-    IFormFile? cardImage
+    IFormFileCollection? cardImage
 );
 /* public TradingStatus? Status { get; set; }
  public TradeType? Type { get; set; }
