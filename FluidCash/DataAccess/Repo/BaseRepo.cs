@@ -17,34 +17,39 @@ public sealed class BaseRepo<T> : IBaseRepo<T> where T : class, IBaseEntity
         _dbSet = _dataContext.Set<T>();
     }
 
-    public IQueryable<T> GetAll()
+    public IQueryable<T> GetAll(bool trackChanges)
     {
-        return _dbSet.AsNoTracking();
+        return trackChanges? 
+            _dbSet :
+            _dbSet.AsNoTracking();
     }
 
     public IQueryable<T>
         GetByCondition
-        (Expression<Func<T, bool>> conditionExpression)
+        (Expression<Func<T, bool>> conditionExpression, bool trackChanges)
     {
-        return _dbSet.Where(conditionExpression)
-            .AsNoTracking();
+        return trackChanges ? 
+            _dbSet.Where(conditionExpression) : 
+            _dbSet.Where(conditionExpression).AsNoTracking();
     }
 
     public IQueryable<T>
-        GetAllNonDeleted()
+        GetAllNonDeleted(bool trackChanges)
     {
-        return _dbSet
-            .Where(t => !t.IsDeleted)
-            .AsNoTracking();
+        return trackChanges?
+            _dbSet.Where(t => !t.IsDeleted) :
+            _dbSet.Where(t => !t.IsDeleted).AsNoTracking();
     }
 
     public IQueryable<T>
         GetNonDeletedByCondition
-        (Expression<Func<T, bool>> condition)
+        (Expression<Func<T, bool>> condition, bool trackChanges)
     {
-        return _dbSet.Where(condition)
-            .Where(t => !t.IsDeleted);
-
+        return trackChanges?
+            _dbSet.Where(condition)
+            .Where(t => !t.IsDeleted) :
+            _dbSet.Where(condition)
+            .Where(t => !t.IsDeleted).AsNoTracking();
     }
 
     public async Task<bool>

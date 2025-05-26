@@ -9,10 +9,10 @@ public interface IBaseRepo<T> where T : class
     Task RollbackTransactionAsync();
     Task BeginTransactionAsync();
     Task<bool> ExistsByConditionAsync(Expression<Func<T, bool>> condition);
-    IQueryable<T> GetAll();
-    IQueryable<T> GetByCondition (Expression<Func<T, bool>> conditionExpression);
-    IQueryable<T> GetAllNonDeleted();
-    IQueryable<T> GetNonDeletedByCondition (Expression<Func<T, bool>> condition);
+    IQueryable<T> GetAll(bool trackChanges);
+    IQueryable<T> GetByCondition (Expression<Func<T, bool>> conditionExpression, bool trackChanges);
+    IQueryable<T> GetAllNonDeleted(bool trackChanges);
+    IQueryable<T> GetNonDeletedByCondition(Expression<Func<T, bool>> condition, bool trackChanges);
     Task AddAsync(T entity);
     Task AddRangeAsync(IEnumerable<T> entities);
     void Update(T entity);

@@ -31,7 +31,7 @@ public sealed class AccountMgtServices : IAccountMgtServices
     }
 
 
-    public async Task<bool> 
+    public async Task<bool>
         CreateUserAccountAsync
         (CreateUserAccountParams createUserAccountDto)
     {
@@ -57,7 +57,7 @@ public sealed class AccountMgtServices : IAccountMgtServices
 
             return true;
         }
-        catch (Exception ex) 
+        catch (Exception ex)
         {
             return false;
         }
@@ -67,7 +67,7 @@ public sealed class AccountMgtServices : IAccountMgtServices
         DeleteDpAsync
         (string accountId, string userId)
     {
-        var account = _accountRepo.GetNonDeletedByCondition(x => x.Id == accountId)
+        var account = _accountRepo.GetNonDeletedByCondition(x => x.Id == accountId, trackChanges: true)
             .FirstOrDefault();
         if (account is null)
         {
@@ -87,7 +87,7 @@ public sealed class AccountMgtServices : IAccountMgtServices
         }
         account.DpCloudinaryId = string.Empty;
         account.DpUrl = string.Empty;
-        _accountRepo.Update(account);
+        //_accountRepo.Update(account);
         await _accountRepo.SaveChangesAsync();
 
         string? successMsg = "Dp deleted successfully";
@@ -98,77 +98,68 @@ public sealed class AccountMgtServices : IAccountMgtServices
         GetUserAccountAsync
         (string accountId)
     {
-        var account = await _accountRepo.GetNonDeletedByCondition(acc => acc.Id == accountId)
+        var accountReponse = await _accountRepo.GetNonDeletedByCondition(acc => acc.Id == accountId, trackChanges: false)
             .Include(acc => acc.BankDetail)
-            .AsNoTracking()
-            .FirstOrDefaultAsync();
-        if (account is null)
-        {
-            string? errorMsg = "Account not found";
-            return StandardResponse<AccountResponseDto>.Failed(data: null, errorMessage: errorMsg);
-        }
-        var accountDto = new AccountResponseDto
+            .Select(acc => new AccountResponseDto
             (
-                account.Id,
-                account.AppUser?.Email,
-                account.DisplayName,
-                account.DpUrl,
+                acc.Id,
+                acc.AppUser!.Email,
+                acc.DisplayName,
+                acc.DpUrl,
+                acc.CreatedAt,
                 new BankDetailsResponse
                 (
-                    account.BankDetail?.BankCode,
-                    account.BankDetail?.AccountName,
-                    account.BankDetail?.AccountNumber
+                    acc.BankDetail.BankCode,
+                    acc.BankDetail.AccountName,
+                    acc.BankDetail.AccountNumber
                 )
-            );
-        return StandardResponse<AccountResponseDto>.Success(data: accountDto);
+            ))
+            .FirstOrDefaultAsync();
+        if (accountReponse is null)
+        {
+            string? errorMsg = "Account not found";
+            return StandardResponse<AccountResponseDto>.Failed(data: null, errorMessage: errorMsg, statusCode: 404);
+        }
+        return StandardResponse<AccountResponseDto>.Success(data: accountReponse);
     }
 
     public async Task<StandardResponse<IEnumerable<AccountResponseDto>>>
         GetAllAccountsAsync(AccountsFilterParams accountsFilterParams)
     {
-        //The query and filter will fail due to Select included in base query
-        var accountQuery = _accountRepo.GetAll()
-            .Include(x => x.BankDetail)
-            .Select(holder => new
-            {
-                id = holder.Id,
-                userMail = holder.AppUser.Email,
-                displayName = holder.DisplayName,
-                dpUrl = holder.DpUrl,
-                bankCode = holder.BankDetail.BankCode,
-                accName = holder.BankDetail.AccountName,
-                accNumber = holder.BankDetail.AccountNumber
-
-            })
-            .AsNoTracking();
+        //The query and filter will fail due to Select included in base query : Tentatively fixed, test, confirm and remove
+        var accountQuery = _accountRepo.GetAll(trackChanges: false);
         if (!string.IsNullOrEmpty(accountsFilterParams.accountId))
         {
-            accountQuery = accountQuery.Where(x => EF.Functions.Like(x.id, accountsFilterParams.accountId));
+            accountQuery = accountQuery.Where(x => EF.Functions.Like(x.Id, accountsFilterParams.accountId));
         }
         if (!string.IsNullOrEmpty(accountsFilterParams.displayName))
         {
-            string frmtddisplayName = accountsFilterParams.displayName.ToLower();
-            accountQuery = accountQuery.Where(x => EF.Functions.Like(x.displayName.ToLower(), $"%{frmtddisplayName}%"));
+            string lowDisplayName = accountsFilterParams.displayName.ToLower();
+            accountQuery = accountQuery.Where(x => EF.Functions.Like(x.DisplayName!.ToLower(), $"%{lowDisplayName}%"));
         }
         if (!string.IsNullOrEmpty(accountsFilterParams.userMail))
         {
-            string frmtduserMail = accountsFilterParams.userMail.ToLower();
-            accountQuery = accountQuery.Where(x => EF.Functions.Like(x.userMail.ToLower(), $"%{frmtduserMail}%"));
+            string lowUserMail = accountsFilterParams.userMail.ToLower();
+            accountQuery = accountQuery.Where(x => EF.Functions.Like(x.AppUser!.Email!.ToLower(), $"%{lowUserMail}%"));
         }
 
-        var response = await accountQuery.Select(query => new AccountResponseDto
-        (
-            query.id,
-            query.userMail,
-            query.displayName,
-            query.dpUrl,
-            new BankDetailsResponse
+        var response = await accountQuery
+            .Include(acc => acc.AppUser)
+            .Include(x => x.BankDetail)
+            .Select(query => new AccountResponseDto
             (
-                query.bankCode,
-                query.accName,
-                query.accNumber
-            )
-        )).ToListAsync();
+                query.Id,
+                query.AppUser!.Email,
+                query.DisplayName,
+                query.DpUrl,
+                query.CreatedAt,
+                new BankDetailsResponse
+                (
+                    query.BankDetail.BankCode,
+                    query.BankDetail.AccountName,
+                    query.BankDetail.AccountNumber
+                )
+            )).ToListAsync();
 
         return StandardResponse<IEnumerable<AccountResponseDto>>.Success(data: response);
     }
@@ -178,18 +169,17 @@ public sealed class AccountMgtServices : IAccountMgtServices
     {
         // Fetch account with includes asynchronously
         var account = await _accountRepo
-            .GetNonDeletedByCondition(x => x.AppUserId == userId)
+            .GetNonDeletedByCondition(x => x.AppUserId == userId, trackChanges: false)
             .Include(x => x.AppUser)
             .Include(x => x.Wallet)
                 .ThenInclude(wallet => wallet.Transactions)
                 .ThenInclude(trans => trans.Trading)
-            .AsNoTracking()
             .FirstOrDefaultAsync();
 
         // If account is not found, return failure response
         if (account is null)
         {
-            return StandardResponse<DashboardResponse>.Failed(null, "Account not found");
+            return StandardResponse<DashboardResponse>.Failed(null, "Account not found", statusCode: 404);
         }
 
         // Get wallet transactions for today
@@ -216,7 +206,7 @@ public sealed class AccountMgtServices : IAccountMgtServices
                         trans.Trading.Type,
                         trans.Trading.ValidUntil,
                         trans.Trading.OtherDetails,
-                        await _giftCardServices.GetGiftCardByIdAsync(trans.Trading.GiftCardId), // Awaiting properly
+                        await _giftCardServices.GetGiftCardByIdAsync(trans.Trading.GiftCardId, trackChanges: false), // Awaiting properly
                         trans.Trading.WalletId,
                         trans.Trading.Status
                     )
@@ -244,7 +234,7 @@ public sealed class AccountMgtServices : IAccountMgtServices
         InitiateWithdrawalAsync
         (InitiateWithdrawalParams withdrawalParams, string userId)
     {
-        var account = _accountRepo.GetNonDeletedByCondition(x => x.Id == withdrawalParams.accountId)
+        var account = _accountRepo.GetNonDeletedByCondition(x => x.Id == withdrawalParams.accountId, trackChanges: true)
             .Include(acc => acc.AppUser)
             .Include(acc => acc.Wallet)
             .FirstOrDefault();
@@ -276,7 +266,7 @@ public sealed class AccountMgtServices : IAccountMgtServices
         account!.Wallet!.Balance -= withdrawalParams.amount;
 
         //Create withdrawal transaction
-        _accountRepo.Update(account);
+        //_accountRepo.Update(account);
         await _accountRepo.SaveChangesAsync();
 
         //Ensure wallet is debited else update wallet
@@ -296,7 +286,7 @@ public sealed class AccountMgtServices : IAccountMgtServices
         UpdateBankDetails
         (BankDetailsDto bankDetailsDto, string userId)
     {
-        var account = _accountRepo.GetNonDeletedByCondition(x => x.Id == bankDetailsDto.accountId)
+        var account = _accountRepo.GetNonDeletedByCondition(x => x.Id == bankDetailsDto.accountId, trackChanges: true)
             .Include(acc => acc.BankDetail)
             .FirstOrDefault();
         if (account is null)
@@ -325,7 +315,7 @@ public sealed class AccountMgtServices : IAccountMgtServices
        CreateBankDetails
        (BankDetailsDto bankDetailsDto, string userId)
     {
-        var account = _accountRepo.GetNonDeletedByCondition(x => x.Id == bankDetailsDto.accountId)
+        var account = _accountRepo.GetNonDeletedByCondition(x => x.Id == bankDetailsDto.accountId, trackChanges: true)
             .FirstOrDefault();
         if (account is null)
         {
@@ -334,7 +324,7 @@ public sealed class AccountMgtServices : IAccountMgtServices
         }
         if (!string.IsNullOrWhiteSpace(account.BankDetailId))
         {
-            string errorMsg = "Bank details already exist";
+            string errorMsg = "Bank details already exist, kidnly update instead.";
             return StandardResponse<string>.Failed(data: null, errorMessage: errorMsg);
         }
         var bankDetail = new BankDetail
@@ -356,14 +346,14 @@ public sealed class AccountMgtServices : IAccountMgtServices
         UploadDpAsync
         (UploadDpParams uploadDpParams, string? userId)
     {
-        var account = _accountRepo.GetNonDeletedByCondition(x => x.Id == uploadDpParams.accountId)
+        var account = _accountRepo.GetNonDeletedByCondition(x => x.Id == uploadDpParams.accountId, trackChanges: true)
             .FirstOrDefault();
         if (account is null)
         {
             string? errorMessage = "Account not found";
             return StandardResponse<string>.Failed(data: null, errorMessage);
         }
-        if(!string.IsNullOrWhiteSpace(account.DpCloudinaryId))
+        if (!string.IsNullOrWhiteSpace(account.DpCloudinaryId))
         {
             await _cloudinaryServices.DeleteFileFromCloudinaryAsync(account.DpCloudinaryId);
         }
@@ -375,10 +365,27 @@ public sealed class AccountMgtServices : IAccountMgtServices
         }
         account.DpCloudinaryId = uploadResp.Data.filePublicId;
         account.DpUrl = uploadResp.Data.fileUrlPath;
-        _accountRepo.Update(account);
+        //_accountRepo.Update(account);
         await _accountRepo.SaveChangesAsync();
 
         string? successMsg = "Photo upload successful";
+        return StandardResponse<string>.Success(data: null, successMessage: successMsg);
+    }
+
+    public async Task<StandardResponse<string>>
+        EnableDisableNotificationAsync(string userId, bool isEnabled)
+    {
+        var account = _accountRepo.GetNonDeletedByCondition(x => x.AppUserId == userId, trackChanges: true)
+            .FirstOrDefault();
+        if (account is null)
+        {
+            string? errorMsg = "Account not found";
+            return StandardResponse<string>.Failed(data: null, errorMessage: errorMsg);
+        }
+        account.IsNotificationEnabled = isEnabled;
+        //_accountRepo.Update(account);
+        await _accountRepo.SaveChangesAsync();
+        string? successMsg = "Notification settings updated successfully";
         return StandardResponse<string>.Success(data: null, successMessage: successMsg);
     }
 }

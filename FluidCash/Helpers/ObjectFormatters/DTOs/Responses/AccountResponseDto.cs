@@ -6,6 +6,7 @@ public record AccountResponseDto
     string? userEmail,
     string? displayName,
     string? dpUrl,
+    DateTime? createdAt,
     BankDetailsResponse? bankDetails
 );
 

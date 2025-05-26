@@ -36,4 +36,7 @@ public interface IAccountMgtServices
 
     Task<StandardResponse<string>>
         ConfirmWithdrawalAsync(ConfirmWithdrawalParams confirmWithdrawalParams, string? userId);
+
+    Task<StandardResponse<string>>
+        EnableDisableNotificationAsync(string userId, bool isEnabled);
 }

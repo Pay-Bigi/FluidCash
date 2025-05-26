@@ -44,21 +44,21 @@ public sealed class WalletServices : IWalletServices
     public async Task<bool>
         CreditWalletAsync(CreditAndDebitWalletParams? creditWalletParams, string? userId)
     {
-        var accountToCredit = _walletRepo.GetNonDeletedByCondition(wallet => wallet.Id == creditWalletParams.walletId)
+        var accountToCredit = _walletRepo.GetNonDeletedByCondition(wallet => wallet.Id == creditWalletParams.walletId, trackChanges: true)
             .FirstOrDefault();
         if (accountToCredit is null)
         {
             return false;
         }
         accountToCredit.Balance += creditWalletParams.amount;
-        _walletRepo.Update(accountToCredit);
+        //_walletRepo.Update(accountToCredit);
         await _walletRepo.SaveChangesAsync();
         return true;
     }
 
     public async Task<bool> DebitWalletAsync(CreditAndDebitWalletParams? debitWalletParams, string? userId)
     {
-        var accountToDedit = _walletRepo.GetNonDeletedByCondition(wallet => wallet.Id == debitWalletParams.walletId)
+        var accountToDedit = _walletRepo.GetNonDeletedByCondition(wallet => wallet.Id == debitWalletParams.walletId, trackChanges: true)
             .FirstOrDefault();
         if (accountToDedit is null)
         {
@@ -66,7 +66,7 @@ public sealed class WalletServices : IWalletServices
         }
         if(accountToDedit.Balance <debitWalletParams.amount) { return false; }
         accountToDedit.Balance -= debitWalletParams.amount;
-        _walletRepo.Update(accountToDedit);
+        //_walletRepo.Update(accountToDedit);
         await _walletRepo.SaveChangesAsync();
         return true;
     }
@@ -153,7 +153,7 @@ public sealed class WalletServices : IWalletServices
     public async Task<StandardResponse<IEnumerable<WalletResponseDto>>> GetAllWalletsAsync()
     {
         var allWallets = await _walletRepo
-            .GetAllNonDeleted()
+            .GetAllNonDeleted(trackChanges: false)
             .AsNoTracking()
             .Include(wlt => wlt.Transactions)
                 .ThenInclude(tran => tran.Trading)
@@ -170,7 +170,7 @@ public sealed class WalletServices : IWalletServices
     public async Task<StandardResponse<WalletResponseDto>> GetUserWalletAsync(string? walletId, string? userId)
     {
         var userWallet = await _walletRepo
-            .GetNonDeletedByCondition(wlt => wlt.Id == walletId && wlt.CreatedBy == userId)
+            .GetNonDeletedByCondition(wlt => wlt.Id == walletId && wlt.CreatedBy == userId, trackChanges: false)
             .AsNoTracking()
             .Include(wlt => wlt.Transactions)
                 .ThenInclude(tran => tran.Trading)

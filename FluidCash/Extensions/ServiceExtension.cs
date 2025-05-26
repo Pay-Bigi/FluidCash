@@ -298,8 +298,8 @@ public static class ServiceExtension
     {
         services.AddHttpClient("interswitchAuth", (serviceProvider, client) =>
         {
-            string clientId = Environment.GetEnvironmentVariable("interswitchClientId")!;
-            string secretKey = Environment.GetEnvironmentVariable("interswitchSecretKey")!;
+            string clientId = "IKIA72C65D005F93F30E573EFEAC04FA6DD9E4D344B1"; // Environment.GetEnvironmentVariable("interswitchClientId")!;
+            string secretKey = "YZMqZezsltpSPNb4+49PGeP7lYkzKn1a5SaVSyzKOiI=";// Environment.GetEnvironmentVariable("interswitchSecretKey")!;
             string concatenatedString = clientId + ":" + secretKey;
             var encodedString = Convert.ToBase64String(Encoding.UTF8.GetBytes(concatenatedString));
             client.DefaultRequestHeaders.Add("accept", "application/json");

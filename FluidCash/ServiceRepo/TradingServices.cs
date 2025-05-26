@@ -37,7 +37,8 @@ public sealed class TradingServices : ITradingServices
         ApproveGiftCardSellAsync
         (ApproveGiftCardSellParams approveGiftCardDto, string userId)
     {
-        var trade = _tradingRepo.GetByCondition(x => x.Id == approveGiftCardDto.tradeId).FirstOrDefault();
+        var trade = _tradingRepo.GetByCondition(x => x.Id == approveGiftCardDto.tradeId, trackChanges: true)
+            .FirstOrDefault();
         if (trade is null)
         {
             string? errorMessage = "Trade not found";
@@ -68,7 +69,7 @@ public sealed class TradingServices : ITradingServices
 
         trade.UpdatedAt = DateTime.UtcNow;
         trade.UpdatedBy = userId;
-        _tradingRepo.Update(trade);
+        //_tradingRepo.Update(trade);
         await _tradingRepo.SaveChangesAsync();
 
         string? successMessage = "Trade status updated successfully";
@@ -80,7 +81,8 @@ public sealed class TradingServices : ITradingServices
         ApproveGiftCardPurchaseAsync
         (ApproveGiftCardPurchaseParams approveGiftCardPurchaseDto, string? userId)
     {
-        var trade = _tradingRepo.GetByCondition(x => x.Id == approveGiftCardPurchaseDto.tradeId).FirstOrDefault();
+        var trade = _tradingRepo.GetByCondition(x => x.Id == approveGiftCardPurchaseDto.tradeId, trackChanges: true)
+            .FirstOrDefault();
         if (trade is null)
         {
             string? errorMessage = "Trade not found";
@@ -121,7 +123,7 @@ public sealed class TradingServices : ITradingServices
         }
         trade.UpdatedAt = DateTime.UtcNow;
         trade.UpdatedBy = userId;
-        _tradingRepo.Update(trade);
+        //_tradingRepo.Update(trade);
         await _tradingRepo.SaveChangesAsync();
 
         string? successMessage = "Trade status updated successfully";
@@ -132,7 +134,7 @@ public sealed class TradingServices : ITradingServices
         BuyGiftCardAsync
         (BuyGiftCardParams buyGiftCardDto, string userId)
     {
-        var cardToBuyResponse = await _giftCardServices.GetGiftCardByIdAsync(buyGiftCardDto.giftCardId);
+        var cardToBuyResponse = await _giftCardServices.GetGiftCardByIdAsync(buyGiftCardDto.giftCardId, trackChanges: false);
 
         if (cardToBuyResponse is not null)
         {
@@ -232,7 +234,7 @@ public sealed class TradingServices : ITradingServices
         DeleteTradeAync
         (string tradeId, string userId)
     {
-        var tradeToDelete = _tradingRepo.GetNonDeletedByCondition(x => x.Id == tradeId && x.CreatedBy == userId)
+        var tradeToDelete = _tradingRepo.GetNonDeletedByCondition(x => x.Id == tradeId && x.CreatedBy == userId, trackChanges: true)
             .FirstOrDefault();
         if (tradeToDelete is null)
         {
@@ -242,7 +244,7 @@ public sealed class TradingServices : ITradingServices
         _tradingRepo.SoftDelete(tradeToDelete);
         tradeToDelete.UpdatedBy = userId;
         tradeToDelete.UpdatedAt = DateTime.UtcNow;
-        _tradingRepo.Update(tradeToDelete);
+        //_tradingRepo.Update(tradeToDelete);
         await _tradingRepo.SaveChangesAsync();
 
         string? successMessage = "Trade deleted successfully";
@@ -253,7 +255,7 @@ public sealed class TradingServices : ITradingServices
         GetAllTradingsAsync
         (GetTradingsFilterParams getTradingsDto)
     {
-        var query = _tradingRepo.GetAll();
+        var query = _tradingRepo.GetAll(trackChanges: false);
         if (!string.IsNullOrWhiteSpace(getTradingsDto.tradeId))
         {
             var tradeId = getTradingsDto.tradeId.ToLower();
@@ -336,7 +338,7 @@ public sealed class TradingServices : ITradingServices
         GetUserTradingsAsync
         (GetTradingsFilterParams getTradingsDto, string userId)
     {
-        var query = _tradingRepo.GetNonDeletedByCondition(x => x.CreatedBy == userId);
+        var query = _tradingRepo.GetNonDeletedByCondition(x => x.CreatedBy == userId, trackChanges: false);
         if (!string.IsNullOrWhiteSpace(getTradingsDto.tradeId))
         {
             var tradeId = getTradingsDto.tradeId.ToLower();
@@ -419,7 +421,7 @@ public sealed class TradingServices : ITradingServices
         SellGiftCardAsync
         (SellGiftCardParams sellGiftCardDto, string userId)
     {
-        var cardToSellResponse = await _giftCardServices.GetGiftCardByIdAsync(sellGiftCardDto.giftCardId);
+        var cardToSellResponse = await _giftCardServices.GetGiftCardByIdAsync(sellGiftCardDto.giftCardId, trackChanges: false);
 
         if (cardToSellResponse is not null)
         {

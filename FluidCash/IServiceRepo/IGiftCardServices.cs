@@ -10,7 +10,7 @@ public interface IGiftCardServices
         GetGiftCardByIdApiAsync (string cardId);
 
     Task<GiftCardResponseDto?>
-        GetGiftCardByIdAsync(string cardId);
+        GetGiftCardByIdAsync(string cardId, bool trackChanges);
 
     Task<decimal>
         GetGiftCardRateByIdAsync(string giftCardRateId);
